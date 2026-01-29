@@ -2,11 +2,10 @@ pipeline {
     agent any
 
     environment {
-        SSH_CRED  = 'ssh-jenkinsprod'
-        WIN_USER  = 'administrator'
-        WIN_HOST  = '192.168.192.131'
+        WIN_HOST   = '192.168.192.131'
+        WIN_USER   = 'administrator'
         TARGET_DIR = 'C:/inetpub/wwwroot/AKR_LC_FAME'
-        BACKUP_ROOT = 'E:/BACKUP/AFTER'
+        SSH_CRED  = 'ssh-jenkinsprod'
     }
 
     stages {
@@ -20,77 +19,75 @@ pipeline {
         stage('Backup Existing Files') {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -Command "
-                        \$timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-                        \$backupPath = Join-Path '${BACKUP_ROOT}' \$timestamp
-                        \$target = '${TARGET_DIR}'
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
+                    "powershell -NoProfile -Command \\"& {
+                        \\$timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+                        \\$backupRoot = 'E:/BACKUP/AFTER'
+                        \\$backupPath = Join-Path \\$backupRoot \\$timestamp
 
-                        New-Item -ItemType Directory -Force -Path \$backupPath | Out-Null
+                        New-Item -ItemType Directory -Force -Path \\$backupPath | Out-Null
 
-                        foreach (\$folder in 'Areas','Models','Views','bin') {
-                            \$src = Join-Path \$target \$folder
-                            \$dst = Join-Path \$backupPath \$folder
-                            if (Test-Path \$src) {
-                                robocopy \$src \$dst /E /R:2 /W:2 | Out-Null
+                        foreach (\\$folder in 'Areas','Models','Views','bin') {
+                            \\$src = Join-Path '${TARGET_DIR}' \\$folder
+                            \\$dst = Join-Path \\$backupPath \\$folder
+
+                            if (Test-Path \\$src) {
+                                robocopy \\$src \\$dst /E /R:2 /W:2 | Out-Null
                             }
                         }
 
-                        Write-Host 'Backup completed to:' \$backupPath
-                    "
-                    """
+                        Write-Host 'Backup completed to:' \\$backupPath
+                    }\\""
+                    '''
                 }
             }
         }
 
         stage('Delete Old Files') {
-    steps {
-        sshagent(credentials: [env.SSH_CRED]) {
-            sh '''
-            ssh -o StrictHostKeyChecking=no administrator@192.168.192.131 \
-            "powershell -NoProfile -Command \\"& {
-                foreach (\\$folder in 'Areas','Models','Views','bin') {
-                    \\$path = Join-Path 'C:/inetpub/wwwroot/AKR_LC_FAME' \\$folder
-                    if (Test-Path \\$path) {
-                        Remove-Item \\$path -Recurse -Force
-                    }
+            steps {
+                sshagent(credentials: [env.SSH_CRED]) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
+                    "powershell -NoProfile -Command \\"& {
+                        foreach (\\$folder in 'Areas','Models','Views','bin') {
+                            \\$path = Join-Path '${TARGET_DIR}' \\$folder
+                            if (Test-Path \\$path) {
+                                Remove-Item \\$path -Recurse -Force
+                            }
+                        }
+                        Write-Host 'Old folders deleted'
+                    }\\""
+                    '''
                 }
-                Write-Host 'Old folders deleted'
-            }\\""
-            '''
+            }
         }
-    }
-}
-
 
         stage('Deploy New Files (SCP)') {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
-                    sh """
+                    sh '''
                     scp -o StrictHostKeyChecking=no -r \
-                        Areas \
-                        Models \
-                        Views \
-                        bin \
+                        Areas Models Views bin \
                         ${WIN_USER}@${WIN_HOST}:${TARGET_DIR}/
-                    """
+                    '''
                 }
             }
         }
 
         stage('Verify Deployment') {
-    steps {
-        sshagent(credentials: [env.SSH_CRED]) {
-            sh '''
-            ssh -o StrictHostKeyChecking=no administrator@192.168.192.131 \
-            "powershell -NoProfile -Command \\"& {
-                Get-ChildItem 'C:/inetpub/wwwroot/AKR_LC_FAME'
-            }\\""
-            '''
+            steps {
+                sshagent(credentials: [env.SSH_CRED]) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
+                    "powershell -NoProfile -Command \\"& {
+                        Get-ChildItem '${TARGET_DIR}'
+                    }\\""
+                    '''
+                }
+            }
         }
     }
-}
-
 
     post {
         success {
