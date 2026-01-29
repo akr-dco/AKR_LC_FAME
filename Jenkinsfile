@@ -28,28 +28,34 @@ pipeline {
         }
 
         stage('Backup Existing Files (Versioning)') {
-            steps {
-                sshagent(credentials: [env.SSH_CRED]) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -Command "
-                        $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-                        $backupPath = '${BACKUP_DIR}\\' + $timestamp
-                        $target = '${TARGET_DIR}'
+    steps {
+        sshagent(credentials: [env.SSH_CRED]) {
+            sh '''
+            ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
+            powershell -NoProfile -Command "& {
+                $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+                $backupRoot = 'E:\\BACKUP\\AFTER'
+                $backupPath = Join-Path $backupRoot $timestamp
+                $target = 'C:\\inetpub\\wwwroot\\AKR_LC_FAME'
 
-                        New-Item -ItemType Directory -Force -Path $backupPath | Out-Null
+                New-Item -ItemType Directory -Force -Path $backupPath | Out-Null
 
-                        foreach ($folder in @('Areas','Models','Views','bin')) {
-                            if (Test-Path \"$target\\$folder\") {
-                                robocopy \"$target\\$folder\" \"$backupPath\\$folder\" /E /COPY:DAT /R:2 /W:2 | Out-Null
-                            }
-                        }
+                foreach ($folder in 'Areas','Models','Views','bin') {
+                    $src = Join-Path $target $folder
+                    $dst = Join-Path $backupPath $folder
 
-                        Write-Host '✅ Backup completed:' $backupPath
-                    "
-                    '''
+                    if (Test-Path $src) {
+                        robocopy $src $dst /E /COPY:DAT /R:2 /W:2 | Out-Null
+                    }
                 }
-            }
+
+                Write-Host 'Backup completed:' $backupPath
+            }"
+            '''
         }
+    }
+}
+
 
         stage('Deploy New Files (SCP)') {
             steps {
@@ -66,18 +72,20 @@ pipeline {
             }
         }
 
-        stage('Verify Deployment') {
-            steps {
-                sshagent(credentials: [env.SSH_CRED]) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -Command "
-                        Get-ChildItem '${TARGET_DIR}' | Select Name, LastWriteTime
-                    "
-                    '''
-                }
-            }
+       stage('Verify Deployment') {
+    steps {
+        sshagent(credentials: [env.SSH_CRED]) {
+            sh '''
+            ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
+            powershell -NoProfile -Command "& {
+                Get-ChildItem 'C:\\inetpub\\wwwroot\\AKR_LC_FAME' |
+                Select-Object Name, LastWriteTime
+            }"
+            '''
         }
     }
+}
+
 
     post {
         success {
