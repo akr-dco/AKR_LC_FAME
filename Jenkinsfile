@@ -44,22 +44,24 @@ pipeline {
         }
 
         stage('Delete Old Files') {
-            steps {
-                sshagent(credentials: [env.SSH_CRED]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -Command "
-                        foreach (\$folder in 'Areas','Models','Views','bin') {
-                            \$path = Join-Path '${TARGET_DIR}' \$folder
-                            if (Test-Path \$path) {
-                                Remove-Item \$path -Recurse -Force
-                            }
-                        }
-                        Write-Host 'Old folders deleted'
-                    "
-                    """
+    steps {
+        sshagent(credentials: [env.SSH_CRED]) {
+            sh '''
+            ssh -o StrictHostKeyChecking=no administrator@192.168.192.131 \
+            "powershell -NoProfile -Command \\"& {
+                foreach (\\$folder in 'Areas','Models','Views','bin') {
+                    \\$path = Join-Path 'C:/inetpub/wwwroot/AKR_LC_FAME' \\$folder
+                    if (Test-Path \\$path) {
+                        Remove-Item \\$path -Recurse -Force
+                    }
                 }
-            }
+                Write-Host 'Old folders deleted'
+            }\\""
+            '''
         }
+    }
+}
+
 
         stage('Deploy New Files (SCP)') {
             steps {
@@ -77,17 +79,18 @@ pipeline {
         }
 
         stage('Verify Deployment') {
-            steps {
-                sshagent(credentials: [env.SSH_CRED]) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -Command "
-                        Get-ChildItem '${TARGET_DIR}'
-                    "
-                    """
-                }
-            }
+    steps {
+        sshagent(credentials: [env.SSH_CRED]) {
+            sh '''
+            ssh -o StrictHostKeyChecking=no administrator@192.168.192.131 \
+            "powershell -NoProfile -Command \\"& {
+                Get-ChildItem 'C:/inetpub/wwwroot/AKR_LC_FAME'
+            }\\""
+            '''
         }
     }
+}
+
 
     post {
         success {
