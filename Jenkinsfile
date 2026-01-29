@@ -6,7 +6,7 @@ pipeline {
         WIN_USER   = 'administrator'
         TARGET_DIR = 'C:/inetpub/wwwroot/AKR_LC_FAME'
         BACKUP_DIR = 'E:/BACKUP/AFTER'
-        SSH_CRED   = 'akr-dco'
+        SSH_CRED   = 'ssh-jenkinsprod'
     }
 
     stages {
