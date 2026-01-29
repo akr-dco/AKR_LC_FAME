@@ -2,67 +2,75 @@ pipeline {
     agent any
 
     environment {
-        WIN_HOST  = "192.168.192.131"
-        WIN_USER  = "administrator"
-        SSH_CRED = "ssh-jenkinsprod"
-
-        APP_NAME  = "AKR_LC_FAME"
-        TARGET_DIR = "C:/inetpub/wwwroot/AKR_LC_FAME"
-        BACKUP_ROOT = "E:/BACKUP/AFTER"
+        WIN_HOST   = '192.168.192.131'
+        WIN_USER   = 'administrator'
+        TARGET_DIR = 'C:/inetpub/wwwroot/AKR_LC_FAME'
+        SSH_CRED   = 'akr-dco'
     }
 
     stages {
 
+        /* ================================
+           BACKUP (VERSIONING)
+        ================================= */
         stage('Backup Existing Files') {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -EncodedCommand "JAB0AGkAbQBlAHMAdABhAG0AcAAgAD0AIABHAGUAdAAtAEQAYQB0AGUAIAAtAEYAbwByAG0AYQB0ACAAJwB5AHkAeQB5AE0ATQBkAGQALQBIAGgAbQBtAHMAcwAnAAoAJABiAGEAYwBrAHUAcABSAG8AbwB0ACAAPQAgACcARQA6AFwAQgBBAEMASwBVAFwAQQBGAEUAUgAnAAoAJABiAGEAYwBrAHUAcABQAGEAdABoACAAPQAgAEoAbwBpAG4ALQBQAGEAdABoACAAJABiAGEAYwBrAHUAcABSAG8AbwB0ACAAJAB0AGkAbQBlAHMAdABhAG0AcAAKACQAdABhAHIAZwBlAHQAIAA9ACAAJwBDADoAXABpAG4AZQB0AHAAdQBiAFwAdwB3AHcAcgBvAG8AdABcAEEASwBSAF8ATABDAF8ARgBBAE0ARQAnAAoATgBlAHcALQBJAHQAZQBtACAALQBJAHQAZQBtAFQAeQBwAGUAIABEAGkAcgBlAGMAdABvAHIAeQAgAC0ARgBvAHIAYwBlACAALQBQAGEAdABoACAAJABiAGEAYwBrAHUAcABQAGEAdABoACAAfAAgAE8AdQB0AC0ATgB1AGwAbAAKAGYAbwByAGUAYQBjAGgAIAAoACQAZgBvAGwAZABlAHIAIABpAG4AIAAnAEEAcgBlAGEAcwAnACwAJwBNAG8AZABlAGwAcwAnACwAJwBWAGkAZQB3AHMAJwAsACcAYgBpAG4AJwApACAAewAKACAAIAAkAHMAcgBjACAAPQAgAEoAbwBpAG4ALQBQAGEAdABoACAAJAB0AGUAcgBnAGUAdAAgACQAZgBvAGwAZABlAHIAAAoAIAAgACQAZABzAHQAIAA9ACAAAEoAbwBpAG4ALQBQAGEAdABoACAAJABiAGEAYwBrAHUAcABQAGEAdABoACAAJABmAG8AbABkAGUAcgAKACAAIABpAGYAIABUAGUAcwB0AC0AUABhAHQAaAAgACQAcwByAGMAKQAgAHsACgAgACAAIAAgAHIAbwBiAG8AYwBvAHAAeQAgACQAcwByAGMAIAAkAGQAcwB0ACAALwBFACAALwBDADoAUwBBAFQAIAAvAFIALwAyACAALwBXADoAMgAgAHwAIABPAHUAdAAtAE4AdQBsAGwACgAgACAAfQAKAH0ACgBXAHIAaQB0AGUALQBIAG8AcwB0ACAAJwBCAGEAYwBrAHUAcAAgAGMAbwBtAHAAbABlAHQAZQBkADoAJwAgACQAYgBhAGMAawB1AHAAUABhAHQAaAA="
-                    '''
+ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -EncodedCommand JAB0AGkAbQBlAHMAdABhAG0AcAAgAD0AIABHAGUAdAAtAEQAYQB0AGUAIAAtAEYAbwByAG0AYQB0ACAAIgB5AHkAeQB5AE0ATQBkAGQALQBIAGgAbQBtAHMAcwAiAAoAJABiAGEAYwBrAHUAcABSAG8AbwB0ACAAPQAgACIARQA6AFwAQgBBAEMASwBVAFwAQQBGAEUAUgAiAAoAJABiAGEAYwBrAHUAcABQAGEAdABoACAAPQAgAEoAbwBpAG4ALQBQAGEAdABoACAAJABiAGEAYwBrAHUAcABSAG8AbwB0ACAAJAB0AGkAbQBlAHMAdABhAG0AcAAKACQAdABhAHIAZwBlAHQAIAA9ACAAIgBDADoAXABpAG4AZQB0AHAAdQBiAFwAdwB3AHcAcgBvAG8AdABcAEEASwBSAF8ATABDAF8ARgBBAE0ARQAiAAoATgBlAHcALQBJAHQAZQBtACAALQBJAHQAZQBtAFQAeQBwAGUAIABEAGkAcgBlAGMAdABvAHIAeQAgAC0ARgBvAHIAYwBlACAALQBQAGEAdABoACAAJABiAGEAYwBrAHUAcABQAGEAdABoACAAfAAgAE8AdQB0AC0ATgB1AGwAbAAKAGYAbwByAGUAYQBjAGgAIAAoACQAZgBvAGwAZABlAHIAIABpAG4AIAAnAEEAcgBlAGEAcwAnACwAJwBNAG8AZABlAGwAcwAnACwAJwBWAGkAZQB3AHMAJwAsACcAYgBpAG4AJwApACAAewAKACAAIAAkAHMAcgBjACAAPQAgAEoAbwBpAG4ALQBQAGEAdABoACAAJAB0AGUAcgBnAGUAdAAgACQAZgBvAGwAZABlAHIAAAoAIAAgACQAZABzAHQAIAA9ACAAAEoAbwBpAG4ALQBQAGEAdABoACAAJABiAGEAYwBrAHUAcABQAGEAdABoACAAJABmAG8AbABkAGUAcgAKACAAIABpAGYAIABcACgAVABlAHMAdAAtAFAAYQB0AGgAIAAkAHMAcgBjACkAIAB7AAoAIAAgACAAIAByAG8AYgBvAGMAbwBwAHkAIAAkAHMAcgBjACAAPQAgACQAZABzAHQAIAAvAEUAIAAvAEMATwBQAFkAOgBEAEEAVAAgAC8AUgA6ADIAIAAvAFcAOgAyACAAfAAgAE8AdQB0AC0ATgB1AGwAbAAKACAAIAB9AAoAfQAKAFcAcgBpAHQAZQAtAEgAbwBzAHQAIAAiAEIAYQBjAGsAdQBwACAAYwBvAG0AcABsAGUAdABlAGQAIg==
+'''
                 }
             }
         }
 
+        /* ================================
+           DELETE OLD FILES
+        ================================= */
         stage('Delete Old Files') {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -Command "
-                    Remove-Item -Recurse -Force `
-                        ${TARGET_DIR}\\Areas,
-                        ${TARGET_DIR}\\Models,
-                        ${TARGET_DIR}\\Views,
-                        ${TARGET_DIR}\\bin `
-                        -ErrorAction SilentlyContinue
-                    "
-                    '''
+ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -Command "
+$target='${TARGET_DIR}'
+foreach ($f in 'Areas','Models','Views','bin') {
+    $p = Join-Path $target $f
+    if (Test-Path $p) {
+        Remove-Item $p -Recurse -Force
+    }
+}
+Write-Host 'Old files deleted'
+"
+'''
                 }
             }
         }
 
+        /* ================================
+           DEPLOY NEW FILES
+        ================================= */
         stage('Deploy New Files (SCP)') {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
                     sh '''
-                    scp -o StrictHostKeyChecking=no -r \
-                        AKR_LC_FAME/Areas \
-                        AKR_LC_FAME/Models \
-                        AKR_LC_FAME/Views \
-                        AKR_LC_FAME/bin \
-                        ${WIN_USER}@${WIN_HOST}:${TARGET_DIR}/
-                    '''
+scp -o StrictHostKeyChecking=no -r \
+    Areas Models Views bin \
+    ${WIN_USER}@${WIN_HOST}:${TARGET_DIR}/
+'''
                 }
             }
         }
 
+        /* ================================
+           VERIFY
+        ================================= */
         stage('Verify Deployment') {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -Command "
-                    Test-Path ${TARGET_DIR}\\bin
-                    "
-                    '''
+ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -Command "
+Get-ChildItem '${TARGET_DIR}' | Select Name, LastWriteTime
+"
+'''
                 }
             }
         }
@@ -70,10 +78,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ DEPLOYMENT SUCCESS — backup tersedia di ${BACKUP_ROOT}"
+            echo '✅ DEPLOYMENT SUCCESS — backup tersedia'
         }
         failure {
-            echo "❌ DEPLOYMENT FAILED — backup masih aman, siap rollback"
+            echo '❌ DEPLOYMENT FAILED — backup masih aman, siap rollback'
         }
         always {
             cleanWs()
