@@ -13,7 +13,7 @@ pipeline {
 
         stage('Backup Existing Files') {
     steps {
-        sshagent(credentials: ['akr-dco']) {
+        sshagent(credentials: [env.SSH_CRED]) {
             sh '''
 ssh -o StrictHostKeyChecking=no administrator@192.168.192.131 powershell -NoProfile -Command '
 $ts = Get-Date -Format yyyyMMdd_HHmmss
