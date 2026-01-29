@@ -20,7 +20,7 @@ pipeline {
         stage('Verify Workspace') {
             steps {
                 sh '''
-                echo "📂 Jenkins workspace:"
+                echo "📂 Workspace:"
                 pwd
                 ls -lah
                 '''
@@ -31,26 +31,8 @@ pipeline {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
-                    powershell -NoProfile -Command "& {
-                        $timestamp  = Get-Date -Format 'yyyyMMdd-HHmmss'
-                        $backupRoot = 'E:\\BACKUP\\AFTER'
-                        $backupPath = Join-Path $backupRoot $timestamp
-                        $target     = 'C:\\inetpub\\wwwroot\\AKR_LC_FAME'
-
-                        New-Item -ItemType Directory -Force -Path $backupPath | Out-Null
-
-                        foreach ($folder in 'Areas','Models','Views','bin') {
-                            $src = Join-Path $target $folder
-                            $dst = Join-Path $backupPath $folder
-
-                            if (Test-Path $src) {
-                                robocopy $src $dst /E /COPY:DAT /R:2 /W:2 | Out-Null
-                            }
-                        }
-
-                        Write-Host '✅ Backup completed:' $backupPath
-                    }"
+                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -EncodedCommand "
+                    JAB0AGkAbQBlAHMAdABhAG0AcAAgAD0AIABHAGUAdAAtAEQAYQB0AGUAIAAtAEYAbwByAG0AYQB0ACAAJwB5AHkAeQB5AE0ATQBkAGQALQBIAGgAbQBtAHMAcwAnAAoAJABiAGEAYwBrAHUAcABSAG8AbwB0ACAAPQAgACcARQA6AFwAQgBBAEMASwBVAFwAQQBGAEUAUgAnAAoAJABiAGEAYwBrAHUAcABQAGEAdABoACAAPQAgAEoAbwBpAG4ALQBQAGEAdABoACAAJABiAGEAYwBrAHUAcABSAG8AbwB0ACAAJAB0AGkAbQBlAHMAdABhAG0AcAAKACQAdABhAHIAZwBlAHQAIAA9ACAAJwBDADoAXABpAG4AZQB0AHAAdQBiAFwAdwB3AHcAcgBvAG8AdABcAEEASwBSAF8ATABDAF8ARgBBAE0ARQAnAAoATgBlAHcALQBJAHQAZQBtACAALQBJAHQAZQBtAFQAeQBwAGUAIABEAGkAcgBlAGMAdABvAHIAeQAgAC0ARgBvAHIAYwBlACAALQBQAGEAdABoACAAJABiAGEAYwBrAHUAcABQAGEAdABoACAAfAAgAE8AdQB0AC0ATgB1AGwAbAAKAGYAbwByAGUAYQBjAGgAIAAoACQAZgBvAGwAZABlAHIAIABpAG4AIAAnAEEAcgBlAGEAcwAnACwAJwBNAG8AZABlAGwAcwAnACwAJwBWAGkAZQB3AHMAJwAsACcAYgBpAG4AJwApACAAewAKACAAIAAkAHMAcgBjACAAPQAgAEoAbwBpAG4ALQBQAGEAdABoACAAJAB0AGUAcgBnAGUAdAAgACQAZgBvAGwAZABlAHIAAAoAIAAgACQAZABzAHQAIAA9ACAAAEoAbwBpAG4ALQBQAGEAdABoACAAJABiAGEAYwBrAHUAcABQAGEAdABoACAAJABmAG8AbABkAGUAcgAKACAAIABpAGYAIABUAGUAcwB0AC0AUABhAHQAaAAgACQAcwByAGMAKQAgAHsACgAgACAAIAAgAHIAbwBiAG8AYwBvAHAAeQAgACQAcwByAGMAIAAkAGQAcwB0ACAALwBFACAALwBDADoAUwBBAFQAIAAvAFIALwAyACAALwBXADoAMgAgAHwAIABPAHUAdAAtAE4AdQBsAGwACgAgACAAfQAKAH0ACgBXAHIAaQB0AGUALQBIAG8AcwB0ACAAJwBCAGEAYwBrAHUAcAAgAGMAbwBtAHAAbABlAHQAZQBkADoAJwAgACQAYgBhAGMAawB1AHAAUABhAHQAaAA="
                     '''
                 }
             }
@@ -75,11 +57,8 @@ pipeline {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
-                    powershell -NoProfile -Command "& {
-                        Get-ChildItem 'C:\\inetpub\\wwwroot\\AKR_LC_FAME' |
-                        Select-Object Name, LastWriteTime
-                    }"
+                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -EncodedCommand "
+                    RwBlAHQALQBDAGgAaQBsAGQASQB0AGUAbQAgACcAQwA6AFwAaQBuAGUAdABwAHUAYgBcAHcAdwB3AHIAbwBvAHQAXABBAEsAUgBfAEwAQwBfAEYAQQBNAEUAJwAgAHwAIABTAGUAbABlAGMAdAAtAE8AYgBqAGUAYwB0ACAATgBhAG0AZQAsACAATABhAHMAdABXAHIAaQB0AGUAVABpAG0AZQA="
                     '''
                 }
             }
@@ -90,11 +69,9 @@ pipeline {
         success {
             echo '✅ DEPLOYMENT SUCCESS'
         }
-
         failure {
-            echo '❌ DEPLOYMENT FAILED — backup tersedia untuk rollback'
+            echo '❌ DEPLOYMENT FAILED — backup tersedia'
         }
-
         always {
             cleanWs()
         }
