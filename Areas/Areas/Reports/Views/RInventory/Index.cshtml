@@ -1,0 +1,185 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string fileName = "RPT_INVENTORY_" + DateTime.Now.ToString("yyyyMMdd") + ".xlsx";
+    DateTime EndDate = DateTime.Now;
+    DateTime StartDate = new DateTime(EndDate.Year, EndDate.Month, 1);
+}
+
+<section class="content-header">
+    <h1>
+        Report Inventory
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-xs-18 col-md-12">
+            <div class="box box-primary">
+                <div class="box-body">
+                    @using (Html.BeginForm("#", "#", FormMethod.Post, new { enctype = "multipart/form-data", id = "formID", @class = "form-horizontal" }))
+                    {
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Tgl Receipt From
+                            </label>
+                            <div class="col-sm-4">
+                                @Html.Kendo().DateRangePicker().Name("DateRange").Range(r => r.Start(StartDate).End(EndDate))
+
+                            </div>
+
+                        </div>
+                    }
+                    @(Html.Kendo().Grid<AKR_LANDED_COST_FAME.Areas.Reports.Models.ReportInventoryViewModel>()
+                        .Name("gridInventory")
+                        .Columns(columns =>
+                        {
+                            columns.Bound(c => c.SiteName).Width(120).Title("Site");
+                            columns.Bound(c => c.TglReceipt).Format("{0:dd-MM-yyyy}").Width(120).Title("Received Date");
+                            columns.Bound(c => c.NomorPO).Width(120).Title("PO Number");
+                            columns.Bound(c => c.NomorPOCLd).Width(120).Title("PO Number FA");
+                            columns.Bound(c => c.Product).Width(200).Title("Goods");
+                            columns.Bound(c => c.Transport).Width(200);
+                            columns.Bound(c => c.Supplier).Width(200);
+                            columns.Bound(c => c.Suhu).Width(200).Title("Suhu");
+                            columns.Bound(c => c.PODate).Format("{0:dd-MM-yyyy}").Width(120).Title("Inv. Date");
+                            columns.Bound(c => c.QTY_BL_OBV).Format("{0:#,##0.000}").Width(120).Title("Qty BL OBV")
+                            .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #");
+                            columns.Bound(c => c.QTY_BL_15C).Format("{0:#,##0.000}").Width(120).Title("Qty BL @Liter 15C")
+                            .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #");
+                            columns.Bound(c => c.QTY_RECEIVED_OBV).Format("{0:#,##0.000}").Width(120).Title("Qty Received Obv")
+                            .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #");
+                            columns.Bound(c => c.QTY_RECEIVED_15C).Format("{0:#,##0.000}").Width(120).Title("Qty Received 15C")
+                            .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #");
+                            columns.Bound(c => c.CostOfProduct).Format("{0:#,##0.000}").Width(120).Title("Cost of Product")
+                            .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #");
+
+                            columns.Group(g => g.Title("Fixed Cost")
+                            .Columns(col =>
+                            {
+                                col.Bound(c => c.HandlingCost).Format("{0:#,##0.000}").Width(120)
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #").Title("Handling Cost");
+                                col.Bound(c => c.InterestFinancing).Format("{0:#,##0.000}").Width(120)
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #").Title("Interest Financing");
+                                col.Bound(c => c.UnloadingSurveyor).Format("{0:#,##0.000}").Width(120)
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #").Title("Unloading Surveyor");
+                                col.Bound(c => c.Others).Format("{0:#,##0.000}").Width(120)
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #").Title("Others");
+                            })
+                            );
+
+                            columns.Bound(c => c.InterestFinancing).Format("{0:#,##0.000}").Width(120)
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #");
+                            columns.Bound(c => c.TotalVariableCost).Format("{0:#,##0.000}").Width(120).Title("Total Fixed Cost")
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #");
+                            columns.Bound(c => c.TotalLandedCost).Format("{0:#,##0.000}").Width(120).Title("Total Landed Cost")
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #");
+                            columns.Bound(c => c.CostPerUnit).Format("{0:#,##0.000}").Width(120).Title("Cost Per Unit (IDR) base on Qty BL")
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #");
+                            columns.Bound(c => c.CostPerUnitReceived).Format("{0:#,##0.000}").Width(120).Title("Cost Per Unit (IDR) base on Qty Received ")
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #");
+                            columns.Bound(c => c.SelisihCostPerUnit).Format("{0:#,##0.000}").Width(120).Title("Selisih cost (IDR) Per unit. BL Vs Received")
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #");
+
+                            columns.Group(g => g.Title("Goods")
+                            .Columns(col =>
+                            {
+                                col.Bound(c => c.SurplusSusut).Format("{0:#,##0.000}").Width(120)
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #").Title("Surplus (susut) BL Vs received ");
+                                col.Bound(c => c.SurplusSusutPercentage).Format("{0:#,##0.000}").Width(120)
+                                .ClientFooterTemplate("#= kendo.toString(sum, '0,0.000') #").Title("Percentage surplus (susut)");
+                            })
+                            );
+
+                        })
+                        .ToolBar(tools =>
+                        {
+                            tools.Excel();
+                            tools.Custom()
+                                   .Name("RefreshGrid")
+                                   .Text("Refresh Grid")
+                                   .HtmlAttributes(new { onclick = "RefreshGrid()" })
+                                   .IconClass("k-icon k-i-check")
+                                   .Url("javascript:void(0);");
+                        })
+                        .Pageable(pageable => pageable
+                        .Refresh(true)
+                        .PageSizes(true)
+                        .ButtonCount(5))
+                        .Sortable()
+                        .Scrollable()
+                        .Filterable(ftb => ftb.Extra(false))
+                        .Excel(excel => excel
+                            .FileName(fileName)
+                            .AllPages(true)
+                        )
+                        .Reorderable(r => r.Columns(true))
+                        .Resizable(r => r.Columns(true))
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .Aggregates(a =>
+                            {
+                                a.Add(p => p.QTY_BL_15C).Sum();
+                                a.Add(p => p.QTY_BL_OBV).Sum();
+                                a.Add(p => p.QTY_RECEIVED_OBV).Sum();
+                                a.Add(p => p.QTY_RECEIVED_15C).Sum();
+                                a.Add(p => p.CostOfProduct).Sum();
+                                a.Add(p => p.HandlingCost).Sum();
+                                a.Add(p => p.InterestFinancing).Sum();
+                                a.Add(p => p.UnloadingSurveyor).Sum();
+                                a.Add(p => p.Others).Sum();
+                                a.Add(p => p.TotalVariableCost).Sum();
+                                a.Add(p => p.TotalLandedCost).Sum();
+                                a.Add(p => p.CostPerUnit).Sum();
+                                a.Add(p => p.CostPerUnitReceived).Sum();
+                                a.Add(p => p.SelisihCostPerUnit).Sum();
+                                a.Add(p => p.SurplusSusut).Sum();
+                                a.Add(p => p.SurplusSusutPercentage).Sum();
+                            })
+                            .PageSize(10)
+                            .Model(m => m.Id(x => x.NomorPOCLd))
+                            .Read(read => read.Action("GetReportInventory", "RInventory").Data("Param"))
+                        )
+                    )
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+    function RefreshGrid() {
+        $('#gridInventory').data('kendoGrid').dataSource.read();
+    }
+    function Param() {
+
+        var DateRange = $('#DateRange').data("kendoDateRangePicker").range()
+        return {
+            DateFrom: DateRange.start,
+            DateTo: DateRange.end
+        };
+    }
+</script>
+
+<script>
+    var gridObj;
+
+    $(document).ready(function () {
+        gridObj = $('#gridInventory').getKendoGrid();
+        gridAutoHeight(gridObj, 200);
+    });
+
+    $(window).resize(function () {
+        gridAutoHeight(gridObj, 200);
+    });
+
+    function gridAutoHeight(gridObj, bottomMargin) {
+        try {
+            if (gridObj) {
+                //gridObj.element.height("700");
+                gridObj.element.height($(window).height() - gridObj.element[0].offsetTop - (bottomMargin || 40));
+                gridObj.resize();
+            }
+        } catch (e) {
+            console.log('Error resizing grid: ' + e.toString());
+        }
+    }
+</script>

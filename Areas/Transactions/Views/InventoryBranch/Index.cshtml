@@ -1,0 +1,297 @@
+﻿@model AKR_LANDED_COST_FAME.Areas.Transactions.Models.InventoryBranchViewModel
+@using AKR_LANDED_COST_FAME.Models.ViewModel;
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string msg = string.Empty;
+    if (!string.IsNullOrEmpty(Model.Remarks))
+    {
+        msg = Model.Remarks;
+    }
+}
+
+<section class="content-header">
+    <h1>
+        Inventory Branch
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-xs-18 col-md-12">
+            <div class="box box-primary">
+                <div class="box-body">
+                    @using (Html.BeginForm("Index", "InventoryBranch", FormMethod.Post, new { enctype = "multipart/form-data", id = "FormInventoryBranch", @class = "form-horizontal" }))
+                    {
+                        @Html.HiddenFor(m => m.Status)
+                        @Html.HiddenFor(m => m.ActionType)
+                        if (!string.IsNullOrEmpty(msg))
+                        {
+                            <div class="alert alert-warning alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <h4><i class="icon fa fa-warning"></i> Alert!</h4>
+                                @msg
+                            </div>
+                        }
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Nomor PO <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @if (string.IsNullOrEmpty(Model.PONumber))
+                                {
+                                    @(Html.Kendo().DropDownListFor(m => m.PONumber)
+                                        .OptionLabel("Select")
+                                        .DataTextField("Text")
+                                        .DataValueField("Value")
+                                        .Filter("contains")
+                                        .DataSource(source =>
+                                        {
+                                            source.Read(read => read.Action("GetPurchaseOrder", "InventoryBranch", new { Area = string.Empty })).ServerFiltering(false);
+                                        })
+                                        .Events(e => e.Change("OnChangePurchaseOrder"))
+                                        .HtmlAttributes(new { style = "width: 100%" })
+                                    )
+                                }
+                                else
+                                {
+                                    @Html.Kendo().TextBoxFor(model => model.PONumber).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                                }
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                PO Number F&A <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().TextBoxFor(model => model.PONumberFA).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                PO Date <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().DatePickerFor(model => model.PODate).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Kode Supplier <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().TextBoxFor(model => model.SupplierCode).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                Supplier <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-2">
+                                @Html.Kendo().TextBoxFor(model => model.SupplierName).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Item Product <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().TextBoxFor(model => model.ItemCode).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                Item Description <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-2">
+                                @Html.Kendo().TextBoxFor(model => model.ItemName).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Kode Site <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().TextBoxFor(model => model.SiteCode).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                Site <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-2">
+                                @Html.Kendo().TextBoxFor(model => model.SiteName).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Transport  <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @(Html.Kendo().DropDownListFor(m => m.Transport)
+                                        .OptionLabel("Select")
+                                        .DataTextField("Text")
+                                        .DataValueField("Value")
+                                        .Filter("contains")
+                                        .DataSource(source =>
+                                        {
+                                            source.Read(read => read.Action("GetTransport", "InventoryBranch", new { Area = string.Empty })).ServerFiltering(false);
+                                        })
+                                        .HtmlAttributes(new { style = "width: 100%" })
+                                    )
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                Suhu <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @(Html.Kendo().DropDownListFor(m => m.Suhu)
+                                        .OptionLabel("Select")
+                                        .DataTextField("Text")
+                                        .DataValueField("Value")
+                                        .Filter("contains")
+                                        .DataSource(source =>
+                                        {
+                                            source.Read(read => read.Action("GetSuhu", "InventoryBranch", new { Area = string.Empty })).ServerFiltering(false);
+                                        })
+                                        .HtmlAttributes(new { style = "width: 100%" })
+                                    )
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Quantity Order <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().NumericTextBoxFor(model => model.Quantity).Decimals(5).Format("n5").HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                UM <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().TextBoxFor(model => model.UM).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Purchase Cost IDR <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().NumericTextBoxFor(model => model.POCost).Decimals(5).Format("n5").HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                Amount IDR <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().NumericTextBoxFor(model => model.POAmount).Decimals(5).Format("n5").HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Keterangan <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-10">
+                                @Html.Kendo().TextAreaFor(model => model.PODescription).Rows(4).HtmlAttributes(new { style = "width: 100%;" })
+                            </div>
+                        </div>
+
+
+                    }
+                    <div class="form-group">
+                        <div class="col-md-6" id="button">
+                            <button type="button" class="btn btn-warning" onclick="openWindow(this)">View Workflow History</button>
+                            @if (Model.POStatus == LCStatus.InventoryBranch || (int)Model.POStatus == 0) { 
+                            <button type="button" name="submit" id="submit" value="submit" class="btn btn-primary" onclick="SubmitForm('@ActionType.Submit');">Submit</button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    function openWindow(element) {
+        var PONumber = $("#@Html.IdFor(m=>m.PONumberFA)").val();
+        if (PONumber != "") {
+            var wdw = $("#WFHistory").getKendoWindow();
+            wdw.refresh({ url: "/Transactions/InventoryBranch/WorkflowHistory?id=" + PONumber }).center().open();
+        }
+    }
+    function OnChangePurchaseOrder() {
+        var PONumber = $("#@Html.IdFor(m=>m.PONumber)").val();
+        console.log(PONumber);
+        var url = '@Url.Action("GetPODetail", "InventoryBranch", new { area = "Transactions" })';
+        if (PONumber !="") {
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { 'PONumber': PONumber },
+                dataType: "json",
+                success: function (data) {
+                    try {
+                        var json = data.result;
+                        var poDate = new Date(json.po_ord_date_text);
+
+                        $("#@Html.IdFor(m => m.PONumberFA)").val(json.po_nbr + ".");
+                        $("#@Html.IdFor(m => m.SupplierName)").val(json.ad_name);
+                        $("#@Html.IdFor(m => m.SupplierCode)").val(json.po_vend);
+                        $("#@Html.IdFor(m => m.PODate)").data("kendoDatePicker").value(poDate);
+                        $("#@Html.IdFor(m => m.ItemName)").val(json.pt_desc1);
+                        $("#@Html.IdFor(m => m.ItemCode)").val(json.pod_part);
+                        $("#@Html.IdFor(m => m.SiteName)").val(json.si_desc);
+                        $("#@Html.IdFor(m => m.SiteCode)").val(json.pod_site);
+                        $("#@Html.IdFor(m => m.UM)").val(json.pod_um);
+                        $("#@Html.IdFor(m => m.Quantity)").data("kendoNumericTextBox").value(json.pod_qty_ord);
+                        $("#@Html.IdFor(m => m.Quantity)").data("kendoNumericTextBox").trigger("change");
+                        $("#@Html.IdFor(m => m.POCost)").data("kendoNumericTextBox").value(json.pod_pur_cost);
+                        $("#@Html.IdFor(m => m.POCost)").data("kendoNumericTextBox").trigger("change");
+                        $("#@Html.IdFor(m => m.POAmount)").data("kendoNumericTextBox").value(json.pod_qty_ord * json.pod_pur_cost);
+                        $("#@Html.IdFor(m => m.POAmount)").data("kendoNumericTextBox").trigger("change");
+                    }
+                    catch (e) {
+                        console.log("err: " + e);
+                    }
+                },
+                failure: function (response) {
+                    console.log('fail: ');
+                },
+                error: function (data) {
+                    console.log('err: '+data);
+                }
+            });
+        } else {
+            $("#@Html.IdFor(m => m.PONumberFA)").val("");
+            $("#@Html.IdFor(m => m.SupplierName)").val("");
+            $("#@Html.IdFor(m => m.SupplierCode)").val("");
+            $("#@Html.IdFor(m => m.PODate)").val("");
+            $("#@Html.IdFor(m => m.ItemName)").val("");
+            $("#@Html.IdFor(m => m.ItemCode)").val("");
+            $("#@Html.IdFor(m => m.SiteName)").val("");
+            $("#@Html.IdFor(m => m.SiteName)").val("");
+            $("#@Html.IdFor(m => m.UM)").val("");
+            $("#@Html.IdFor(m => m.Quantity)").data("kendoNumericTextBox").value(0);
+            $("#@Html.IdFor(m => m.Quantity)").data("kendoNumericTextBox").trigger("change");
+            $("#@Html.IdFor(m => m.POCost)").data("kendoNumericTextBox").value(0);
+            $("#@Html.IdFor(m => m.POCost)").data("kendoNumericTextBox").trigger("change");
+            $("#@Html.IdFor(m => m.POAmount)").data("kendoNumericTextBox").value(0);
+            $("#@Html.IdFor(m => m.POAmount)").data("kendoNumericTextBox").trigger("change");
+        }
+    }
+
+    function SubmitForm(e) {
+
+        $('#@Html.IdFor(m=>m.ActionType)').val(e);
+        $('#@Html.IdFor(m=>m.ActionType)').trigger('change');
+        if (e === '@ActionType.Submit') {
+            if ($("#@Html.IdFor(m=>m.PONumber)").val() === "") {
+                alert("PO Number must be selected!.");
+            } else if ($("#@Html.IdFor(m=>m.PODescription)").val() === "") {
+                alert("PO Description must be filled!.");
+            } else if ($("#@Html.IdFor(m=>m.Suhu)").val() === "") {
+                alert("Suhu must be filled!.");
+            } else if ($("#@Html.IdFor(m=>m.Transport)").val() === "") {
+                alert("Transport must be filled!.");
+            }  else {
+                if (confirm("Are you really sure that you want to submit the data ?")) {
+                    $("#FormInventoryBranch").submit();
+                } else {
+                    alert("You decided to not submit the form!");
+                }
+            }
+        }
+    }
+</script>

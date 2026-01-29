@@ -1,0 +1,49 @@
+﻿@model AKR_LANDED_COST_FAME.Areas.Transactions.Models.TWorkflowViewModel
+@{
+    ViewBag.Title = "View Workflow Details";
+    Layout = "~/Views/Shared/_LayoutBlank.cshtml";
+}
+
+<section class="content-header">
+    <h1>
+        Workflow History
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-xs-18 col-md-12">
+            <div class="box box-primary">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Submitted By</th>
+                            <th>Status</th>
+                            <th>Approval Level</th>
+                            <th>Remarks</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int i = 1;
+                            foreach (var r in Model.ListData)
+                            {
+                                <tr>
+                                    <td>@i </td>
+                                    <td>@r.SubmittedBy</td>
+                                    <td>@r.Status</td>
+                                    <td>@r.ApproverLevelName</td>
+                                    <td>@r.Remarks</td>
+                                    <td>@r.WFDate.ToString("dd-MMM-yyyy HH:mm:ss")</td>
+                                </tr>
+                                i++;
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+

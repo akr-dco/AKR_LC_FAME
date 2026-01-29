@@ -1,0 +1,144 @@
+﻿@using AKR_LANDED_COST_FAME.Areas.Transactions.Models
+@using AKR_LANDED_COST_FAME.Helpers
+@using AKR_LANDED_COST_FAME.Models.ViewModel
+@{
+    ViewBag.Title = "Index";
+    string fileName = "EXPORT_DATA" + DateTime.Now.ToString();
+    long[] RoleLevel = SessionHelper.Current.UserData.ListRoleLevel.ToArray();
+}
+<section class="content">
+    <div class="row">
+        <div class="col-lg-12 col-xs-24">
+            <div class="box box-primary">
+
+                @{
+
+                    if (RoleLevel.Contains((long)LCStatus.InventoryBranch))
+                    {
+                        <div class="box-header with-border">
+                            <h3 class="box-title">LIST INVENTORY BRANCH </h3>
+                        </div>
+                        @(Html.Kendo().Grid<InventoryBranchViewModel>()
+                                        .Name("GridInventoryReceiptBranch")
+                                        .Columns(columns =>
+                                        {
+                                            columns.Bound(c => c.PONumberFA).Title("ID").Width(120).ClientTemplate("<a href='/Transactions/InventoryBranch/Index?id=#= PONumberFA #' " + ">#=PONumberFA#</a>");
+                                            columns.Bound(c => c.SupplierName).Width(200);
+                                            columns.Bound(c => c.ItemName).Width(200);
+                                            columns.Bound(c => c.SiteName).Width(200);
+                                            columns.Bound(c => c.Quantity).Format("{0:#,##0.00000}").Width(150);
+                                            columns.Bound(c => c.POCost).Format("{0:#,##0.00000}").Width(150);
+                                            columns.Bound(c => c.StatusText).Title("Status").Width(400);
+                                        })
+                                        //.ToolBar(tools => tools.Excel())
+                                        .Pageable(pageable => pageable
+                                        .Refresh(true)
+                                        .PageSizes(true)
+                                        .ButtonCount(5))
+                                        .Sortable()
+                                        .Scrollable()
+                                        .Filterable(ftb => ftb.Extra(false))
+                                        .Excel(excel => excel
+                                            .FileName(fileName)
+                                            .AllPages(true)
+                                        )
+                                        .Reorderable(r => r.Columns(true))
+                                        .Resizable(r => r.Columns(true))
+                                        .DataSource(dataSource => dataSource
+                                            .Ajax()
+                                            .PageSize(10)
+                                            .Model(m => m.Id(x => x.PONumberFA))
+                                            .Read(read => read.Action("GetDataInventoryBranch", "Home"))
+                                        )
+                        )
+                    }
+                    if (RoleLevel.Contains((long)LCStatus.InventoryReceipt))
+                    {
+                        <hr />
+                        <div class="box-header with-border">
+                            <h3 class="box-title">LIST INVENTORY RECEIPT</h3>
+                        </div>
+                        @(Html.Kendo().Grid<InventoryReceiptViewModel>()
+                                        .Name("GridInventoryReceipt")
+                                        .Columns(columns =>
+                                        {
+                                            columns.Bound(c => c.PONumberFA).Title("ID").Width(120).ClientTemplate("<a href='/Transactions/InventoryReceipt/Index?id=#= PONumberFA #&rcpt=#= ReceiptNo #' " + ">#=PONumberFA#</a>");
+                                            columns.Bound(c => c.SiteName).Width(100);
+                                            columns.Bound(c => c.ReceivedDate).Width(120).Format("{0:dd-MM-yyyy}");
+                                            columns.Bound(c => c.TTBNumber).Width(150);
+                                            columns.Bound(c => c.Quantity_BL_OBV).Width(200).Format("{0:#,##0.00000}");
+                                            columns.Bound(c => c.Quantity_RCVD_OBV).Width(200).Format("{0:#,##0.00000}");
+                                            columns.Bound(c => c.StatusText).Title("Status").Width(400);
+                                        })
+                                        //.ToolBar(tools => tools.Excel())
+                                        .Pageable(pageable => pageable
+                                        .Refresh(true)
+                                        .PageSizes(true)
+                                        .ButtonCount(5))
+                                        .Sortable()
+                                        .Scrollable()
+                                        .Filterable(ftb => ftb.Extra(false))
+                                        .Excel(excel => excel
+                                            .FileName(fileName)
+                                            .AllPages(true)
+                                        )
+                                        .Reorderable(r => r.Columns(true))
+                                        .Resizable(r => r.Columns(true))
+                                        .DataSource(dataSource => dataSource
+                                            .Ajax()
+                                            .PageSize(10)
+                                            .Model(m => m.Id(x => x.PONumberFA))
+                                            .Read(read => read.Action("GetDataInventoryReceipt", "Home"))
+                                        )
+                        )
+                    }
+                    if (RoleLevel.Contains((long)LCStatus.DetailLC))
+                    {
+                        <hr />
+                        <div class="box-header with-border">
+                            <h3 class="box-title">LIST DETAIL LC</h3>
+                        </div>
+                        @(Html.Kendo().Grid<DetailLCViewModel>()
+                                        .Name("GridLC")
+                                        .Columns(columns =>
+                                        {
+                                            columns.Bound(c => c.PONumberFA).Width(100);
+                                            columns.Bound(c => c.PONumberFA).Title("Journal").Width(200).ClientTemplate("<a href='/Reports/JournalMemorial/Index?id=#= PONumberFA #&rcpt=#= ReceiptNo #' " + ">View Journal Memorial</a>");
+                                            columns.Bound(c => c.PONumberFA).Title("Detail LC").Width(200).ClientTemplate("<a href='/Transactions/DetailLC/Index?id=#= PONumberFA #&rcpt=#= ReceiptNo #' " + ">View Detail LC</a>");
+                                            columns.Bound(c => c.SiteName).Width(100);
+                                            columns.Bound(c => c.SupplierName).Width(120);
+                                            columns.Bound(c => c.TTBNumber).Width(200);
+                                            columns.Bound(c => c.ItemName).Width(200);
+                                            columns.Bound(c => c.Transport).Width(200);
+                                            columns.Bound(c => c.PODate).Width(200).Format("{0:dd-MM-yyyy}");
+                                            columns.Bound(c => c.ReceivedDate).Width(200).Format("{0:dd-MM-yyyy}");
+                                            columns.Bound(c => c.StatusText).Title("Status").Width(400);
+                                        })
+                                        //.ToolBar(tools => tools.Excel())
+                                        .Pageable(pageable => pageable
+                                        .Refresh(true)
+                                        .PageSizes(true)
+                                        .ButtonCount(5))
+                                        .Sortable()
+                                        .Scrollable()
+                                        .Filterable(ftb => ftb.Extra(false))
+                                        .Excel(excel => excel
+                                            .FileName(fileName)
+                                            .AllPages(true)
+                                        )
+                                        .Reorderable(r => r.Columns(true))
+                                        .Resizable(r => r.Columns(true))
+                                        .DataSource(dataSource => dataSource
+                                            .Ajax()
+                                            .PageSize(10)
+                                            .Model(m => m.Id(x => x.PONumberFA))
+                                            .Read(read => read.Action("GetDataDetailLC", "Home"))
+                                        )
+                        )
+                    }
+
+                }
+            </div>
+        </div>
+    </div>
+</section>

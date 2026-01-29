@@ -1,0 +1,105 @@
+﻿@model AKR_LANDED_COST_FAME.Areas.MasterData.Models.ConfigurationViewModel
+@{
+    Page.Title = "Configuration";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row">
+    <div class="col-xs-18 col-md-12">
+        <div class="box box-primary">
+            <!--<div class="box-header with-border">
+                <h3 class="box-title">Configuration Setting</h3>
+
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool btn-sm" data-widget="collapse">
+                        <i class="fa fa-minus"></i>
+                    </button>
+                </div>
+            </div>-->
+            <!-- /.box-header -->
+            <div class="box-body">
+                <div id="validation-success"></div>
+                @(Html.Kendo().Form<AKR_LANDED_COST_FAME.Areas.MasterData.Models.ConfigurationViewModel>()
+                    .Name("FormConfigurationSetting")
+                    .HtmlAttributes(new { action = @Url.Action("Index", "Configuration"), method = "POST" })
+                    .Layout("grid")
+                    .Grid(g => g.Cols(2).Gutter(20))
+                    .Validatable(v =>
+                    {
+                        v.ValidateOnBlur(true);
+                        v.ValidationSummary(vs => vs.Enable(false));
+                    })
+                    .Items(items =>
+                    {
+                        items.AddGroup()
+                            .Label("Configuration Setting")
+                            //.Layout("grid")
+                            //.Grid(g => g.Cols(3).Gutter(10))
+                            .Items(i =>
+                            {
+                                i.Add()
+                                    .Field(f => f.ItemCode)
+                                    .Label(l => l.Text("Filter item code fame :"))
+                                    .Editor(e =>
+                                    {
+                                        e.MultiSelect()
+                                            .HtmlAttributes(new { })
+                                            .Placeholder("Item code fame")
+                                            .Filter(FilterType.Contains)
+                                            .DataTextField("Text")
+                                            .DataValueField("Value")
+                                            .HtmlAttributes(new { style = "width:100%" })
+                                            .Height(520)
+                                            .DataSource(source =>
+                                            {
+                                                source.Read(read =>
+                                                {
+                                                    read.Action("SelectListItemFame", "Configuration", new { Area = "MasterData" });
+                                                })
+                                                .ServerFiltering(false);
+                                            });
+                                    });
+                                i.Add()
+                                    .Field(f => f.RangeDate)
+                                    .Label(l => l.Text("Range of days for filter PO (PO DATE) in days :"))
+                                    .Editor(e =>
+                                    {
+                                        e.NumericTextBox()
+                                            .HtmlAttributes(new { })
+                                            .Placeholder("Range of days")
+                                            .HtmlAttributes(new { style = "width:100%" });
+                                    });
+                                i.Add()
+                                    .Field(f => f.MaxReceipt)
+                                    .Label(l => l.Text("Toleransi Maksimum Quantity Receipt (%):"))
+                                    .Editor(e =>
+                                    {
+                                        e.NumericTextBox()
+                                            .HtmlAttributes(new { })
+                                            .Placeholder("Max (%)")
+                                            .HtmlAttributes(new { style = "width:100%" });
+                                    });
+                            });
+                    })
+                    .ButtonsTemplate("<button class='btn btn-primary k-form-submit' type='submit'>Save</button>")
+                    .Events(ev => ev.ValidateField("onFormValidateField").Submit("onFormSubmit").Clear("onFormClear"))
+                )
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function onFormValidateField(e) {
+        $("#validation-success").html("");
+    }
+
+    function onFormSubmit(e) {
+        //e.preventDefault();
+        //$("#validation-success").html("<div class='k-messagebox k-messagebox-success'>Form data is valid!</div>");
+    }
+
+    function onFormClear(e) {
+        $("#validation-success").html("");
+    }
+</script>

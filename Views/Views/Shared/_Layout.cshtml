@@ -1,0 +1,311 @@
+﻿@using AKR_LANDED_COST_FAME.Helpers;
+@using AKR_LANDED_COST_FAME.Models.Repositories;
+@{
+    string FullName = SessionHelper.Current.FullName;
+    string UserID = SessionHelper.Current.UserID.ToString();
+    MenuRepository menuRepository = new MenuRepository();
+
+    string host = HttpContext.Current.Request.Url.AbsolutePath;
+    string[] words = host.Split('/');
+    string hostName = words[1].ToLower();
+    string ControlName = words.Count() > 2 ? words[2].ToLower() : "";
+    string MethodName = words.Count() > 3 ? words[3].ToLower() : "";
+    hostName = hostName == "" ? "Home" : hostName;
+    MethodName = MethodName == "" ? "index" : MethodName;
+    var active = "";
+    active = hostName == "Home" ? "active" : "";
+
+
+    var ListParentMenu = SessionHelper.Current.UserData.SegregationMenus;
+    var subMenu = SessionHelper.Current.UserData.SegregationMenus.SelectMany(x => x.MenuDetails);
+
+    string title = string.Empty;
+
+    if (string.IsNullOrEmpty(Page.Title))
+    {
+        var currentMenu = ListParentMenu.SelectMany(x => x.MenuDetails).FirstOrDefault(x => ControlName.Contains(x.Controller.ToLower()) && x.Area != "");
+
+        if (currentMenu != null)
+        {
+            if (currentMenu.Method == "#")
+            {
+                var currentPage = subMenu.FirstOrDefault(x => (x.ParentMenuID == currentMenu.MenuID && x.Controller.ToLower().Trim() == ControlName.Trim().ToLower() && x.Area.Trim().ToLower() == hostName.Trim().ToLower() && x.Method.ToLower().Trim() == MethodName.Trim().ToLower())
+                    || (x.ParentMenuID == currentMenu.MenuID && x.Controller.ToLower().Trim() == ControlName.Trim().ToLower() && x.Area.Trim().ToLower() == hostName.Trim().ToLower() && MethodName.Trim().ToLower() == "" && x.Method.ToLower().Trim() == "index"));
+
+                if (currentPage != null)
+                {
+                    title = string.Format("{0} -", currentPage.MenuName);
+                }
+            }
+            else
+            {
+                title = string.Format("{0} -", currentMenu.MenuName);
+            }
+        }
+    }
+    else
+    {
+        title = string.Format("{0} -", Page.Title);
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>@title AKR - LANDED COST FAME</title>
+    <link rel="shortcut icon" href="@Url.Content("~/Content/Images/favicon.ico")">
+
+
+    @Styles.Render("~/bundles/kendo/css")
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin-lte/bower_components/font-awesome/css/font-awesome.min.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin-lte/bower_components/Ionicons/css/ionicons.min.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin-lte/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin-lte/bower_components/jvectormap/jquery-jvectormap.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin-lte/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker.min.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin-lte/bower_components/bootstrap-daterangepicker/daterangepicker.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin-lte/plugins/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css")">
+
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/kendo")
+
+    @*<link href="@Url.Content("~/Content/kendo/2022.2.621/kendo.bootstrap-v4.min.css")" rel="stylesheet" type="text/css" />
+        <link href="@Url.Content("~/Content/bootstrap.min.css")" rel="stylesheet" type="text/css" />
+        <link href="@Url.Content("~/Content/Site.css")" rel="stylesheet" type="text/css" />*@
+    @*<script src="@Url.Content("~/Scripts/kendo/2022.2.621/jquery.min.js")"></script>
+        <script src="@Url.Content("~/Scripts/kendo/2022.2.621/jszip.min.js")"></script>
+        <script src="@Url.Content("~/Scripts/kendo/2022.2.621/kendo.all.min.js")"></script>
+        <script src="@Url.Content("~/Scripts/kendo/2022.2.621/kendo.aspnetmvc.min.js")"></script>
+        <script src="@Url.Content("~/Scripts/bootstrap.min.js")"></script>
+        <script src="@Url.Content("~/Scripts/kendo.modernizr.custom.js")"></script>*@
+
+
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin-lte/bower_components/bootstrap/dist/css/bootstrap.min.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin-lte/dist/css/AdminLTE.min.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/admin-lte/dist/css/skins/_all-skins.min.css")">
+    <link rel="stylesheet" href="@Url.Content("~/Content/fonts-google-css.css")">
+
+    @Styles.Render("~/bundles/akr/css")
+
+    <script>
+        var trigger;
+        jQuery(document).ready(function () {
+
+            trigger = setInterval(function () {
+                session_refresh()
+            }, 60000);
+        });
+
+        function stopTrigger() {
+            clearInterval(trigger);
+        };
+        function session_refresh() {
+            var userID = $("#userID").val();
+            var d = new Date();
+            var n = d.toLocaleTimeString();
+            if (userID === "") {
+                userID = 0;
+            }
+            console.log(n);
+            var url = '@Url.Action("SessionRefresh", "Home", new { area = "" })';
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { 'userID': userID},
+                dataType: "json",
+                success: function (data) {
+                    try {
+                        if (data != true) {
+                            window.location = '@Url.Action("SignOut", "Home", new { area = "" })';
+                        }
+                    }
+                    catch (e) {
+                    }
+                }
+            });
+        }
+        function logout() {
+
+            var reallyLogout = confirm("Do you really want to log out?");
+            if (reallyLogout) {
+                window.location = '@Url.Action("SignOut", "Home", new { area = "" })';
+            }
+        };
+
+    </script>
+</head>
+
+<body class="hold-transition skin-blue fixed sidebar-mini">
+    <div class="wrapper">
+        <header class="main-header">
+            <a href="" class="logo">
+                <span class="logo-mini"><b>AKR</b></span>
+                <span class="logo-lg"><img src="@Url.Content("~/Content/Images/logoakr.png")" width="200" /></span>
+            </a>
+            <nav class="navbar navbar-static-top">
+                <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+                    <span class="sr-only">Toggle navigation</span>
+                </a>
+                <a href="#" class="navbar-brand">
+                    <strong>AKR</strong> LANDED COST FAME
+                </a>
+                <div class="navbar-custom-menu">
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown user user-menu">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <img src="@Url.Content("~/Content/Images/person.png")" width="20" alt="User Image">
+                                <span class="hidden-xs">@FullName</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li class="user-header">
+                                    <img src="@Url.Content("~/Content/Images/person.png")" alt="User Image">
+                                    <p>
+                                        @FullName
+                                        <small>@SessionHelper.Current.UserData.JobTitle</small>
+                                    </p>
+                                </li>
+                                <li class="user-body">
+                                    <p>
+                                        <small>Email : @SessionHelper.Current.UserData.Email</small>
+                                    </p>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+        <aside class="main-sidebar">
+            <section class="sidebar">
+                <input type="hidden" name="userID" id="userID" value="@UserID">
+                <ul class="sidebar-menu" data-widget="tree">
+                    <li class="header"></li>
+
+                    @{
+
+                        <li class="@active"><a href="@Url.Action("Index", "Home", new { area = "" })"><i class="fa fa-home"></i> <span>Home</span></a></li>
+                        active = "";
+
+
+
+                        foreach (var pMenu in ListParentMenu)
+                        {
+                            if (hostName.Contains(pMenu.Area.ToLower()) && pMenu.Area != "")
+                            {
+                                active = "active";
+                            }
+                            else
+                            {
+                                active = "";
+                            }
+                            if (pMenu.Method == "#")
+                            {
+                                <li class="@active treeview">
+                                    <a href="#">
+                                        <span class="k-icon k-svg-icon" aria-hidden="true" style="width:24px; height:24px;">
+                                            @Html.Raw(pMenu.Icon)
+                                        </span>
+                                        <span>@pMenu.MenuName</span>
+                                        <span class="pull-right-container">
+                                            <i class="fa fa-angle-left pull-right"></i>
+                                        </span>
+                                    </a>
+                                    <ul class="treeview-menu">
+                                        @{
+                                            var liActive = string.Empty;
+                                            foreach (var sub in pMenu.MenuDetails)
+                                            {
+                                                if (ControlName.Trim().ToLower() == sub.Controller.ToLower().Trim() && MethodName.Trim().ToLower() == sub.Method.Trim().ToLower() && hostName.Trim().ToLower() == sub.Area.Trim().ToLower())
+                                                {
+                                                    @*if (MethodName.Trim().ToLower() == sub.Method.ToLower().Trim())
+                                                        {
+                                                            <li class="active"><a href="@Url.Action(sub.Method, sub.Controller, new { area = sub.Area })"><i class="fa @sub.Icon"></i> @sub.MenuName</a></li>
+                                                        }
+                                                        else if (MethodName.Trim().ToLower() == "" && sub.Method.ToLower().Trim() == "index")
+                                                        {
+                                                            <li class="active"><a href="@Url.Action(sub.Method, sub.Controller, new { area = sub.Area })"><i class="fa @sub.Icon"></i> @sub.MenuName</a></li>
+                                                        }
+                                                        else
+                                                        {
+                                                            <li class=""><a href="@Url.Action(sub.Method, sub.Controller, new { area = sub.Area })"><i class="fa @sub.Icon"></i> @sub.MenuName</a></li>
+                                                        }*@
+                                                    <li class="active"><a href="@Url.Action(sub.Method, sub.Controller, new { area = sub.Area })"><i class="fa @sub.Icon"></i> @sub.MenuName</a></li>
+
+                                                }
+                                                else
+                                                {
+                                                    <li class=""><a href="@Url.Action(sub.Method, sub.Controller, new { area = sub.Area })"><i class="fa @sub.Icon"></i> @sub.MenuName</a></li>
+                                                }
+                                            }
+                                        }
+
+                                    </ul>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="@active"><a href="@Url.Action(pMenu.Method, pMenu.Controller, new { area = pMenu.Area })"><i class="fa @pMenu.Icon"></i> <span>@pMenu.MenuName</span></a></li>
+                            }
+                        }
+                    }
+
+                    <li onclick="logout()"><a href="#"><i class="fa fa-sign-out"></i> <span>Logout</span></a></li>
+
+                </ul>
+            </section>
+        </aside>
+        <div class="content-wrapper">
+            @(Html.Kendo().Notification()
+                .Name("notification")
+                .Position(p => p.Pinned(true).Bottom(50).Right(10))
+                .Stacking(NotificationStackingSettings.Down)
+                .AutoHideAfter(30000)
+                //.AutoHideAfter(0)
+                .Templates(t =>
+                {
+                    t.Add().Type("error").ClientTemplateID("errorTemplate");
+                    t.Add().Type("success").ClientTemplateID("successTemplate");
+                })
+            )
+            @(Html.Kendo().Window()
+                .Name("WFHistory")
+                .Title("Workflow History")
+                .Iframe(true)
+                .Visible(false)
+                .Draggable(true)
+                .Resizable()
+                .Width(900)
+                .Height(500)
+            )
+            @RenderBody()
+        </div>
+        <footer class="main-footer">
+            <div class="pull-right hidden-xs">
+                <b>Version</b> 1.0.0
+            </div>
+            <strong>Copyright &copy; @DateTime.Now.Year AKR Technology Development.</strong> All rights reserved.
+        </footer>
+        <div class="control-sidebar-bg"></div>
+    </div>
+    <script id="errorTemplate" type="text/x-kendo-template">
+        <div class="alert">
+            <h4><i class="icon fa fa-warning"></i> Alert!</h4>
+            <p>#= message #</p>
+        </div>
+    </script>
+
+    <script id="successTemplate" type="text/x-kendo-template">
+        <div class="alert">
+            <h4><i class="icon fa fa-check-circle-o"></i> Success!</h4>
+            <h3>#= message #</h3>
+        </div>
+    </script>
+    <script>window.myPrefix = '';</script>
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/adminlte/script")
+    @Scripts.Render("~/bundles/akr/script")
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

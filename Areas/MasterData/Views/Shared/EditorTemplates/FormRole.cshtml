@@ -1,0 +1,46 @@
+﻿@model AKR_LANDED_COST_FAME.Areas.MasterData.Models.RoleViewModel
+@Html.HiddenFor(model => model.RowID)
+
+<div class="k-edit-form-container">
+    <div class="k-edit-label">
+        Role Name
+    </div>
+    <div class="k-edit-field">
+        @(Html.Kendo().DropDownListFor(model => model.RoleName)
+            .Filter("contains")
+            .DataTextField("Text")
+            .DataValueField("Value")
+            .DataSource(source => {
+                source.Read(read => read.Action("GetRole", "Role")).ServerFiltering(false);
+            })
+            .HtmlAttributes(new { style = "width:100%", required = "required" }))
+    </div>
+    @*<div class="k-edit-label">
+        Menu
+    </div>
+    <div class="k-edit-field">
+        @(Html.Kendo().MultiSelectFor(model => model.ListMenu)
+            .Filter("contains")
+            .DataTextField("Text")
+            .DataValueField("Value")
+            .DataSource(source => {
+                source.Read(read => read.Action("GetMenu", "Role")).ServerFiltering(false);
+            })
+            .HtmlAttributes(new { style = "width:100%", required = "required" }))
+    </div>*@
+
+    <div class="k-edit-label">
+        Level
+    </div>
+    <div class="k-edit-field">
+        @(Html.Kendo().MultiSelectFor(model => model.ListLevel)
+            .Filter("contains")
+            .DataTextField("Text")
+            .DataValueField("Value")
+            .DataSource(source => {
+                source.Read(read => read.Action("GetLevel", "Role")).ServerFiltering(false);
+            })
+            .HtmlAttributes(new { style = "width:100%", required = "required" }))
+    </div>
+
+</div>

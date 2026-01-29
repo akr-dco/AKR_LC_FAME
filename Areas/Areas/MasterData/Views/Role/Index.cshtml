@@ -1,0 +1,112 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    div.k-edit-form-container {
+        width: 800px;
+        height: auto;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Master Data Role
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-xs-18 col-md-12">
+            <div class="box box-primary">
+                <div class="box-body">
+                    <div class="form-group">
+                    </div>
+                    @(Html.Kendo().Grid<AKR_LANDED_COST_FAME.Areas.MasterData.Models.RoleViewModel>()
+                        .Name("GridRole")
+                        .Events(e=> { e.Edit("OnGridEdit"); })
+                        .Columns(columns =>
+                        {
+                            columns.Bound(c => c.RoleName).Width(150);
+                            //columns.Bound(c => c.MenuName);
+                            columns.Bound(c => c.LevelName).Width(250);
+                            columns.Command(command => { command.Edit(); command.Destroy(); }).Width(250);
+                        })
+                        .ToolBar(t=> {
+                            t.Create();
+                            t.Excel();
+                        })
+                        .Filterable(f => f.Extra(false))
+                        .Editable(e=>e.Mode(GridEditMode.PopUp).TemplateName("FormRole"))
+                        .HtmlAttributes(new { style = "height: 550px;" })
+                        .Scrollable()
+                        .Resizable(r=>r.Columns(true))
+                        .Groupable()
+                        .Sortable()
+                        .Pageable(pageable => pageable
+                        .Refresh(true)
+                        .PageSizes(true)
+                        .ButtonCount(5))
+                        .DataSource(dataSource => dataSource
+                        .Ajax()
+                        .Model(m=>m.Id(p=>p.RowID))
+                        .Read(read => read.Action("GetData", "Role"))
+                        .Create(create => create.Action("CreateData", "Role"))
+                        .Destroy(d => d.Action("DeleteData", "Role"))
+                        .Update(u => u.Action("UpdateData", "Role"))
+                        .PageSize(20)
+                        .Events(e=> {
+                            e.Error("OnError");
+                            e.RequestEnd("OnRequestEnd");
+                        })
+                        )
+                        )
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<script>
+    function OnRequestEnd(e) {
+        var grid = $("#GridRole").data("kendoGrid");
+        if (e.type == "create" || e.type == "update") {
+            if (!e.response.Errors) {
+                this.read();
+            }
+        } else if (e.type == "destroy") {
+            this.read();
+        }
+
+
+
+    }
+    function OnError(args) {
+        if (args.errors) {
+            var grid = $("#GridRole").data("kendoGrid");
+            grid.one("dataBinding", function (e) {
+                e.preventDefault(); // cancel grid rebind if error occurs
+            });
+            var message = "";
+            $.each(args.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function () {
+                        message += this + "\n";
+                    });
+                }
+            });
+            alert(message);
+        }
+    }
+
+    function OnGridEdit(e) {
+        e.model.dirty = true;
+        if (e.model.isNew()) {
+            $('.k-window-title').text("Add");
+            $(".k-grid-update")[0].innerHTML = "<span class='k-icon k-i-check'></span>Save";
+        } else {
+        }
+    }
+</script>
+

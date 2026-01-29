@@ -1,0 +1,149 @@
+﻿@model AKR_LANDED_COST_FAME.Areas.Reports.Models.ReportHandlingViewModel
+@using AKR_LANDED_COST_FAME.Models.ViewModel;
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+<style>
+    div.k-edit-form-container {
+        width: 800px;
+        height: auto;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Report Data Handling
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-lg-12 col-xs-24">
+            <div class="box box-primary">
+                <div class="box-body form-horizontal">
+                    @using (Html.BeginForm("Index", "RHandling", FormMethod.Post, new { enctype = "multipart/form-data", id = "FormDetailLC" }))
+                    {
+                        @Html.HiddenFor(m => m.Status)
+                        @Html.HiddenFor(m => m.ActionType)
+
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Nomor PO F&A <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-6">
+                                @(Html.Kendo().DropDownListFor(m => m.PONumbFA)
+                                .OptionLabel("Select")
+                                .DataTextField("Text")
+                                .DataValueField("Value")
+                                .Filter("contains")
+                                .DataSource(source =>
+                                {
+                                    source.Read(read => read.Action("GetPurchaseOrder", "RHandling", new { Area = string.Empty })).ServerFiltering(false);
+                                })
+                                .HtmlAttributes(new { style = "width: 100%" })
+                                )
+                            </div>
+                        </div>
+                        if (!string.IsNullOrEmpty(Model.PONumberFA))
+                        {
+                            <div class="col-lg-12 col-xs-24">
+                                <div class="box box-primary">
+                                    <div class="box-body">
+                                        <table width="100%" class="table">
+                                            <tr>
+                                                <td colspan="5"><b>REPORT HANDLING</b></td>
+                                            </tr>
+                                            <tr>
+                                                <td><b>NOMOR PO</b></td>
+                                                <td 1%>:</td>
+                                                <td><b>@Model.PONumberFA</b></td>
+                                                <td></td>
+                                                
+                                            </tr>
+                                            <tr>
+                                                <td><b>SITE</b></td>
+                                                <td 1%>:</td>
+                                                <td><b>@Model.SiteCode - @Model.SiteName</b></td>
+                                                <td></td>
+                                                
+                                            </tr>
+                                            <tr>
+                                                <td><b>PERCENTAGE</b></td>
+                                                <td 1%>:</td>
+                                                <td><b>@Model.HandlingPercentage.ToString("#,##") %</b></td>
+                                                <td></td>
+                                                
+                                            </tr>
+                                            <tr>
+                                                <td align="center"><b>Tipe Costing</b></td>
+                                                <td 1%></td>
+                                                <td align="center"><b>Jenis Biaya</b></td>
+                                                <td align="center"><b>Tarif</b></td>
+                                                
+                                            </tr>
+                                            @foreach (var item in Model.DataHandling)
+                                            {
+                                                Model.TotalHandlingCostIDR += item.Tarif;
+                                                <tr>
+                                                    <td>@item.TipeCosting</td>
+                                                    <td 1%></td>
+                                                    <td>@item.KomponenBiaya</td>
+                                                    <td align="right">Rp @item.Tarif.ToString("#,##0.000")</td>
+                                                    
+                                                </tr>
+                                            }
+                                        <tr>
+                                            <td colspan="3" align="center"><b>Total Handling Cost @Model.PONumberFA</b></td>
+                                            <td align="right"><b>Rp @Model.TotalHandlingCostIDR.ToString("#,##0.000")</b></td>
+                                            
+                                        </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    <div class="form-group">
+                        <div class="col-md-6" id="button">
+                            <button type="button" name="submit" id="submit" value="submit" class="btn btn-primary" onclick="SubmitForm('@ActionType.View');">View</button>
+                            <button type="button" name="submit" id="submit" value="submit" class="btn btn-primary" onclick="SubmitForm('@ActionType.Export');">Export</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+<script type="text/javascript">
+
+    function SubmitForm(e) {
+        console.log(e);
+        $('#@Html.IdFor(m=>m.ActionType)').val(e);
+        $('#@Html.IdFor(m=>m.ActionType)').trigger('change');
+        if ($("#@Html.IdFor(m=>m.PONumberFA)").val() === "") {
+            alert("PO Number F&A must be selected!.");
+        } else {
+            if (e === '@ActionType.Approve') {
+                if (confirm("Are you really sure that you want to approve the data ?")) {
+                    $("#FormDetailLC").submit();
+                } else {
+                    alert("You decided to not submit the form!");
+                }
+            } else if (e === '@ActionType.Export') {
+                if (confirm("Are you really sure that you want to export the data ?")) {
+                    $("#FormDetailLC").submit();
+                } else {
+                    alert("You decided to not submit the form!");
+                }
+            } else if (e === '@ActionType.View') {
+                if (confirm("Are you really sure that you want to view the data ?")) {
+                    $("#FormDetailLC").submit();
+                } else {
+                    alert("You decided to not submit the form!");
+                }
+            }
+        }
+    }
+</script>

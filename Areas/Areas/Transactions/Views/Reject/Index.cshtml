@@ -1,0 +1,183 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    div.k-edit-form-container {
+        width: 800px;
+        height: auto;
+    }
+</style>
+<section class="content-header">
+    <h1>
+        Cancel Final Approval
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-xs-18 col-md-12">
+            <div class="box box-primary">
+                <div class="box-body">
+                    <div class="form-group">
+                    </div>
+                    @(Html.Kendo().Grid<AKR_LANDED_COST_FAME.Areas.Transactions.Models.InventoryReceiptViewModel>()
+                        .Name("GridRejectData")
+                        .Columns(columns =>
+                        {
+                            columns.Select().Width(50).Locked(true);
+                            columns.Bound(c => c.PONumber).Width(100);
+                            columns.Bound(c => c.PONumberFA).Width(100);
+                            columns.Bound(c => c.SiteName).Width(100);
+                            columns.Bound(c => c.PODate).Width(100).Format("{0:dd-MM-yyyy}");
+                            columns.Bound(c => c.SupplierName).Width(100);
+                            columns.Bound(c => c.POCost).Width(100);
+                            columns.Bound(c => c.Quantity).Width(100).Format("{0: #,##0.00000}");
+                            columns.Bound(c => c.Quantity_BL_15C).Width(100).Format("{0: #,##0.00000}");
+                            columns.Bound(c => c.Quantity_BL_OBV).Width(100).Format("{0: #,##0.00000}");
+                            columns.Bound(c => c.Quantity_RCVD_15C).Width(100).Format("{0: #,##0.00000}");
+                            columns.Bound(c => c.Quantity_RCVD_OBV).Width(100).Format("{0: #,##0.00000}");
+                            columns.Bound(c => c.Remarks).EditorTemplateName("TRemarks").Width(400);
+                        })
+                        .ToolBar(t=> {
+                            t.Custom()
+                                .Name("loading")
+                                .Text("&nbsp;Loading")
+                                .IconClass("fa fa-refresh fa-spin")
+                                .HtmlAttributes(new { @class = "k-primary k-button k-button-icontext", style = "display:none;", id = "loading" });
+                            t.Excel();
+                            t.Custom()
+                                .Name("Reject")
+                                .Text("Reject")
+                                .IconClass("k-icon k-i-close-circle")
+                                .Url("javascript:void(0);")
+                                .HtmlAttributes(new { onclick = "Reject()" });
+                        })
+                        .Filterable(f => f.Extra(false))
+                        .Editable(e => e.Mode(GridEditMode.InCell))
+                        .HtmlAttributes(new { style = "height: 550px;" })
+                        .Scrollable()
+                        .Resizable(r=>r.Columns(true))
+                        .Sortable()
+                        .Pageable(pageable => pageable
+                        .Refresh(true)
+                        .PageSizes(true)
+                        .ButtonCount(5))
+                        .DataSource(dataSource => dataSource
+                        .Ajax()
+                        .Model(m=> {
+                            m.Id(p => p.RowID);
+                            m.Field(p => p.PONumber).Editable(false);
+                            m.Field(p => p.PONumberFA).Editable(false);
+                            m.Field(p => p.SiteName).Editable(false);
+                            m.Field(p => p.PODate).Editable(false);
+                            m.Field(p => p.SupplierName).Editable(false);
+                            m.Field(p => p.Quantity).Editable(false);
+                            m.Field(p => p.POCost).Editable(false);
+                            m.Field(p => p.Quantity_BL_15C).Editable(false);
+                            m.Field(p => p.Quantity_BL_OBV).Editable(false);
+                            m.Field(p => p.Quantity_RCVD_15C).Editable(false);
+                            m.Field(p => p.Quantity_RCVD_OBV).Editable(false);
+                        })
+                        .Read(read => read.Action("GetData", "Reject"))
+                        .PageSize(20)
+                        .Events(e=> {
+                            e.Error("OnError");
+                            e.RequestEnd("OnRequestEnd");
+                        })
+                        )
+                        )
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    function OnRequestEnd(e) {
+        var grid = $("#GridRejectData").data("kendoGrid");
+        if (e.type == "create" || e.type == "update") {
+            if (!e.response.Errors) {
+                this.read();
+            }
+        } else if (e.type == "destroy") {
+            this.read();
+        }
+    }
+    function OnError(args) {
+        if (args.errors) {
+            var grid = $("#GridRejectData").data("kendoGrid");
+            grid.one("dataBinding", function (e) {
+                e.preventDefault(); // cancel grid rebind if error occurs
+            });
+            var message = "";
+            $.each(args.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function () {
+                        message += this + "\n";
+                    });
+                }
+            });
+            alert(message);
+        }
+    }
+    
+    function Reject() {
+        var grid = $("#GridRejectData").data("kendoGrid");
+        var selectedRows = grid.select();
+        if (selectedRows.length == 0) {
+            alert("No data selected.")
+        } else {
+            if (confirm("Are you sure to reject the data?")) {
+                var status = false;
+                var msg = "";
+                var selection = [];
+                var PONumber = [0];
+                var IsDataValid = true;
+
+                grid.select().each(
+                    function () {
+                        var dataItem = grid.dataItem($(this));
+                        if (PONumber.includes(dataItem.PONumber) == false) {
+                            status = true;
+                            PONumber.push(dataItem.PONumber);
+                            selection.push(dataItem);
+
+                            if (dataItem.Remarks == null || dataItem.Remarks == "") {
+                                IsDataValid = false;
+                                msg = "Remarks is required for reject PO : " + dataItem.PONumber;
+                            }
+                        }
+                    }
+                );
+
+                if (status == true && IsDataValid == true) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/Transactions/Reject/RejectList",
+                        data: JSON.stringify({ models: selection }),
+                        contentType: "application/json; charset=utf-8",
+                        beforeSend: function () {
+                            $(".k-grid-Approve").addClass("k-state-disabled");
+                            $(".k-grid-Reject").addClass("k-state-disabled");
+                            document.getElementById('loading').style.display = 'inline-block';
+                        },
+                        success: function (response) {
+                            grid.dataSource.read();
+                            alert(response.responseText);
+                        },
+                        complete: function () {
+                            $(".k-grid-Approve").removeClass("k-state-disabled");
+                            $(".k-grid-Reject").removeClass("k-state-disabled");
+                            document.getElementById('loading').style.display = 'none';
+                            grid.dataSource.read();
+                        }
+                    });
+                } else {
+                    alert("Unable to reject the data. Please check again your selected data.\n" + msg);
+                }
+            }
+        }
+    }
+</script>
+

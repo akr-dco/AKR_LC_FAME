@@ -1,0 +1,186 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    div.k-edit-form-container {
+        width: auto;
+    }
+</style>
+
+<section class="content-header">
+    <h1>
+        Master Template Email
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-xs-18 col-md-12">
+            <div class="box box-primary">
+                <div>
+                    <div class="box-body">
+                        <div class="form-group">
+                        </div>
+                        @(Html.Kendo().Grid<AKR_LANDED_COST_FAME.Areas.MasterData.Models.TemplateEmailViewModel>()
+                        .Name("GridTemplateEmail")
+                        .HtmlAttributes(new { data_enhance_grid = "true" })
+                        .Events(e =>
+                        {
+                            e.Edit("onGridEdit");
+                        })
+                        .Columns(columns =>
+                        {
+                            columns.Bound(c => c.MenuName).Width(160);
+                            columns.Bound(c => c.Type).Width(160);
+                            columns.Bound(c => c.MailTOText).Width(160);
+                            columns.Bound(c => c.MailCCText).Width(160);
+                            columns.Bound(c => c.Subject).Width(300).HtmlAttributes(new { style = "white-space: nowrap" });
+                            columns.Bound(c => c.BodyText).Title("Body").HtmlAttributes(new { style = "white-space: nowrap" });
+                            columns.Command(command => { command.Edit(); }).Width(140);
+                        })
+                        .ToolBar(toolbar => toolbar.Create())
+                        .Scrollable()
+                        .Sortable()
+                        .Resizable(r=>r.Columns(true))
+                        .Filterable(x => x.Extra(false))
+                        .Pageable(pageable => pageable
+                        .Refresh(true)
+                        .PageSizes(true)
+                        .ButtonCount(5))
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .ServerOperation(true)
+                            .Model(m => {
+                                m.Id(f => f.RowID);
+                                m.Field(f => f.RowID).Editable(false);
+                                m.Field(f => f.Status).DefaultValue(true);
+                                m.Field(f => f.Subject).DefaultValue("");
+                                m.Field(f => f.Body).DefaultValue("");
+                            })
+                            .Create(create => create.Action("CreateData", "TemplateEmail"))
+                            .Read(read => read.Action("GetData", "TemplateEmail"))
+                            .Update(update => update.Action("UpdateData", "TemplateEmail"))
+                            .Destroy(delete => delete.Action("DeleteData", "TemplateEmail"))
+                            .PageSize(10)
+                        )
+                        .Editable(editable => editable.Mode(GridEditMode.PopUp).TemplateName("FormTemplateEmail").Window(w => w.Width(800)))
+                    )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+
+    function onGridEdit(e) {
+        //e.model.dirty = true;
+        var subject = $(e.container).find('#Subject_Editor').getKendoEditor(),
+            body = $(e.container).find('#Body').getKendoEditor();
+            //body = $(e.container).find('#Body_Editor').getKendoEditor();
+
+        if (e.model.isNew()) {
+            $('.k-window-title').text("Add");
+            $(".k-grid-update")[0].innerHTML = "<span class='k-icon k-i-check'></span>Save";
+        } else {
+            //$(e.container).find('#Type').data('kendoTextBox').enable(false);
+        }
+
+        $(subject.toolbar.element.find("input#TemplateToolFieldCodeSubject")[0]).kendoDropDownList({
+            optionLabel: "Field Code",
+            dataTextField: 'Text',
+            dataValueField: 'Value',
+            filter: 'contains',
+            autoBind: false,
+            dataSource: DSFieldCode,
+            @*dataSource: {
+                transport: {
+                    read: '@Url.Action("GetEmailSnippetSelectListItems", "Config", new { Area = string.Empty })'
+                }
+            },*@
+            select: function (e) {
+                //$("#Subject").data("kendoEditor").exec("inserthtml", { value: e.sender.value() });
+                if (e.item) {
+                    var dataItem = this.dataItem(e.item);
+                    $("#Subject_Editor").data("kendoEditor").exec("inserthtml", { value: dataItem.Value });
+                    this.select(0);
+                }
+            },
+            close: function (e) {
+                e.sender.select(0);
+                this.select(0);
+            }
+        }).getKendoDropDownList();
+
+        $(body.toolbar.element.find("input#TemplateToolFieldCodeBody")[0]).kendoDropDownList({
+            optionLabel: "Field Code",
+            dataTextField: 'Text',
+            dataValueField: 'Value',
+            filter: 'contains',
+            autoBind: false,
+            dataSource: DSFieldCode,
+            @*dataSource: {
+                transport: {
+                    read: '@Url.Action("GetEmailSnippetSelectListItems", "Config", new { Area = string.Empty })'
+                }
+            },*@
+            select: function (e) {
+                //$("#Body").data("kendoEditor").exec("inserthtml", { value: e.sender.value() });
+                if (e.item) {
+                    var dataItem = this.dataItem(e.item);
+                    $("#Body").data("kendoEditor").exec("inserthtml", { value: dataItem.Value });
+                    this.select(0);
+                }
+            },
+            close: function (e) {
+                e.sender.select(0);
+                this.select(0);
+            }
+        }).getKendoDropDownList();
+    }
+
+    function immutablesSerializationEditor(node) {
+        $("[contenteditable='false']", editor.body).removeClass("selected-immutable");
+        var immutableName = node.className || node.nodeName.toLowerCase();
+        var textAlign = node.style.textAlign;
+        var result = textAlign ?
+            kendo.format("<{0} style='text-align:{1};'></{0}>", immutableName, textAlign) :
+            kendo.format("<{0}></{0}>", immutableName);
+
+        return result;
+    }
+
+    function immutablesDeserializationEditor(node, immutable) {
+        immutable.style.textAlign = node.style.textAlign;
+    }
+
+    function onSelectEditor(e) {
+        var editor = e.sender;
+        var selection = e.sender.getSelection();
+        var selectedNode = selection.anchorNode;
+
+        $("[contenteditable='false']", editor.body).removeClass("selected-immutable");
+        $(selectedNode).closest("[contenteditable='false']").addClass("selected-immutable");
+    }
+
+    function customSerializationEditor(html) {
+        return html.replace(/selected-immutable/, "");
+    }
+
+    function ParamFieldCode() {
+        var data = $("#MenuID").data("kendoDropDownList");
+        var selected = $("#MenuID").data("kendoDropDownList").select();
+        var filter = $("#TemplateToolFieldCodeBody").data("kendoDropDownList").filterInput.val();
+        var MenuName = data.dataItems()[selected].ViewModel;
+        return {
+            filter: filter,
+            MenuName: MenuName
+        }
+    }
+    function OnSelect(e) {
+        DSFieldCode.read();
+        /*DSFieldCodeSubject.read();*/
+    }
+</script>

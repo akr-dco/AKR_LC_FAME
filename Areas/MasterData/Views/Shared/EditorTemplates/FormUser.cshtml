@@ -1,0 +1,69 @@
+﻿@model AKR_LANDED_COST_FAME.Areas.MasterData.Models.UserViewModel
+
+<div class="k-edit-form-container">
+    <div class="k-edit-label">
+        Username
+    </div>
+    <div class="k-edit-field">
+        @(Html.Kendo().DropDownListFor(m=>m.Username)
+                    .OptionLabel("Select")
+                    .Filter("contains")
+                    .DataValueField("Value")
+                    .DataTextField("Text")
+                    .DataSource(source =>
+                    {
+                        source.Read(read =>
+                        {
+                            read.Action("SelectListUser", "Home",new { Area=string.Empty});
+                        })
+                        .ServerFiltering(false);
+                    })
+                    .Events(e=>e.Change("UsernameChange"))
+                    .HtmlAttributes(new { style = "width:100%"}))
+    </div>
+    <div class="k-edit-label">
+        Email
+    </div>
+    <div class="k-edit-field">
+        @Html.Kendo().TextBoxFor(model => model.Email).HtmlAttributes(new { style = "width:100%;" })
+    </div>
+    <div class="k-edit-label">
+        Entity
+    </div>
+    <div class="k-edit-field">
+        @(Html.Kendo().DropDownListFor(m=>m.EntityCode)
+                    .OptionLabel("Select")
+                    .Filter("contains")
+                    .DataValueField("Value")
+                    .DataTextField("Text")
+                    .DataSource(source =>
+                    {
+                        source.Read(read =>
+                        {
+                            read.Action("GetEntity", "User",new { Area=string.Empty});
+                        })
+                        .ServerFiltering(false);
+                    })
+                    .HtmlAttributes(new { style = "width:100%"}))
+    </div>
+    <div class="k-edit-label">
+        Role
+    </div>
+    <div class="k-edit-field">
+        @(Html.Kendo().DropDownListFor(m=>m.RoleID)
+                    .OptionLabel("Select")
+                    .Filter("contains")
+                    .DataValueField("Value")
+                    .DataTextField("Text")
+                    .DataSource(source =>
+                    {
+                        source.Read(read =>
+                        {
+                            read.Action("GetRole", "Role",new { Area=string.Empty});
+                        })
+                        .ServerFiltering(false);
+                    })
+                    .HtmlAttributes(new { style = "width:100%"}))
+    </div>
+
+</div>

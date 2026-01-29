@@ -1,0 +1,363 @@
+﻿@model AKR_LANDED_COST_FAME.Areas.Transactions.Models.InventoryReceiptViewModel
+@using AKR_LANDED_COST_FAME.Models.ViewModel;
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string msg = string.Empty;
+    if (!string.IsNullOrEmpty(Model.Remarks))
+    {
+        msg = Model.Remarks;
+    }
+    string TypePO = string.Empty;
+    if (!string.IsNullOrEmpty(Model.PONumber))
+    {
+        TypePO = "Single";
+    }
+}
+
+<section class="content-header">
+    <h1>
+        Inventory Receipt
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-xs-18 col-md-12">
+            <div class="box box-primary">
+                <div class="box-body">
+                    @using (Html.BeginForm("Index", "InventoryReceipt", FormMethod.Post, new { enctype = "multipart/form-data", id = "FormInventoryReceived", @class = "form-horizontal" }))
+                    {
+                        @Html.HiddenFor(m => m.Status)
+                        @Html.HiddenFor(m => m.ActionType)
+                        @Html.HiddenFor(m => m.POStatus)
+                        if (!string.IsNullOrEmpty(msg))
+                        {
+                            <div class="alert alert-warning alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <h4><i class="icon fa fa-warning"></i> Alert!</h4>
+                                @msg
+                            </div>
+                        }
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Nomor PO <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @if (string.IsNullOrEmpty(Model.PONumber))
+                                {
+                                    @(Html.Kendo().DropDownListFor(m => m.PONumber)
+                                        .OptionLabel("Select")
+                                        .DataTextField("Text")
+                                        .DataValueField("Value")
+                                        .Filter("contains")
+                                        .DataSource(source =>
+                                        {
+                                            source.Read(read => read.Action("GetPurchaseOrder", "InventoryReceipt", new { Area = string.Empty })).ServerFiltering(false);
+                                        })
+                                        .Events(e => e.Change("OnChangePurchaseOrder"))
+                                        .HtmlAttributes(new { style = "width: 100%" })
+                                    )
+                                }
+                                else
+                                {
+                                    @Html.Kendo().TextBoxFor(model => model.PONumber).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                                }
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                Type PO <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().TextBoxFor(model => model.TypePO).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                PO Number F&A <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().TextBoxFor(model => model.PONumberFA).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                Receipt Number <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-1">
+                                @Html.Kendo().TextBoxFor(model => model.ReceiptNo).HtmlAttributes(new { style = "width: 100%;background-color:#eee;", @readonly = "readonly" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Tanggal Received <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().DatePickerFor(model => model.ReceivedDate).HtmlAttributes(new { style = "width: 100%;" })
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                Nomor TTB <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-2">
+                                @Html.Kendo().TextBoxFor(model => model.TTBNumber).HtmlAttributes(new { style = "width: 100%;" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Quantity BL @@Liter Obv <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().NumericTextBoxFor(model => model.Quantity_BL_OBV).Events(e => e.Change("Calculation")).Decimals(5).Format("n5").HtmlAttributes(new { style = "width: 100%;" })
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                Quantity BL @@Liter 15C
+                            </label>
+                            <div class="col-sm-2">
+                                @Html.Kendo().NumericTextBoxFor(model => model.Quantity_BL_15C).Events(e => e.Change("Calculation")).Decimals(5).Format("n5").HtmlAttributes(new { style = "width: 100%;" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Quantity SFBD @@Liter Obv
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().NumericTextBoxFor(model => model.Quantity_SFBD_OBV).Events(e => e.Change("Calculation")).Decimals(5).Format("n5").HtmlAttributes(new { style = "width: 100%;" })
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                Quantity SFBD @@Liter 15C
+                            </label>
+                            <div class="col-sm-2">
+                                @Html.Kendo().NumericTextBoxFor(model => model.Quantity_SFBD_15C).Events(e => e.Change("Calculation")).Decimals(5).Format("n5").HtmlAttributes(new { style = "width: 100%;" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label">
+                                Quantity RECEIVED @@Liter Obv <span style="color:red">*</span>
+                            </label>
+                            <div class="col-sm-3">
+                                @Html.Kendo().NumericTextBoxFor(model => model.Quantity_RCVD_OBV).Events(e => e.Change("Calculation")).Decimals(5).Format("n5").HtmlAttributes(new { style = "width: 100%;" })
+                            </div>
+                            <label class="col-sm-2 control-label">
+                                Quantity RECEIVED @@Liter 15C
+                            </label>
+                            <div class="col-sm-2">
+                                @Html.Kendo().NumericTextBoxFor(model => model.Quantity_RCVD_15C).Events(e => e.Change("Calculation")).Decimals(5).Format("n5").HtmlAttributes(new { style = "width: 100%;" })
+                            </div>
+                        </div>
+                        if (Model.POStatus == LCStatus.InventoryReceipt || string.IsNullOrEmpty(Model.PONumberFA))
+                        {
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">
+                                    Remarks Approval<span style="color:red">*</span>
+                                </label>
+                                <div class="col-sm-10">
+                                    @Html.Kendo().TextAreaFor(model => model.Remarks).Rows(2).HtmlAttributes(new { style = "width: 100%;" })
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">
+                                    Reject To Level <span style="color:red">*</span>
+                                </label>
+                                <div class="col-sm-4">
+                                    @(Html.Kendo().DropDownListFor(m => m.RejectToLevel)
+                                            .OptionLabel("Select")
+                                            .DataTextField("Text")
+                                            .DataValueField("Value")
+                                            .Filter("contains")
+                                            .DataSource(source =>
+                                            {
+                                                source.Read(read => read.Action("GetListLevel", "InventoryReceipt", new { Area = string.Empty })).ServerFiltering(false);
+                                            })
+                                            .HtmlAttributes(new { style = "width: 100%" })
+                                        )
+                                </div>
+                            </div>
+                        }
+                    }
+                    <div class="form-group">
+                        <div class="col-md-6" id="button">
+                            <button type="button" class="btn btn-warning" onclick="openWindow(this)">View Workflow History</button>
+                            <button type="button" class="btn btn-default" onclick="Calculation()">Calculate</button>
+                            @if (Model.POStatus == LCStatus.InventoryReceipt || string.IsNullOrEmpty(Model.PONumberFA))
+                            {
+                                <button type="button" name="submit" id="submit" value="submit" class="btn btn-primary" onclick="SubmitForm('@ActionType.Reject');">Reject to level</button>
+                                <button type="button" name="submit" id="submit" value="submit" class="btn btn-primary" onclick="SubmitForm('@ActionType.Approve');">Approve</button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12 col-xs-24">
+            @(Html.Kendo().Grid<AKR_LANDED_COST_FAME.Areas.Transactions.Models.THandlingCost>()
+                .Name("THandlingCost")
+                .Columns(columns =>
+                {
+                    columns.Bound(c => c.TipeCosting).Width(200);
+                    columns.Bound(c => c.KomponenBiaya).Width(200).Format("{0: #,##0.00000}");
+                    columns.Bound(c => c.Tariff).Width(150).Title("Amount IDR").Format("{0: #,##0.00000}");
+                })
+                .Scrollable()
+                .Sortable()
+                //.AutoBind(false)
+                .Filterable(x => x.Extra(false))
+                .Pageable(pageable => pageable
+                .Refresh(true)
+                .PageSizes(true)
+                .ButtonCount(5))
+                .DataSource(dataSource => dataSource
+                .Ajax()
+                .ServerOperation(true)
+                .Model(m => m.Id(user => user.BHID))
+                .Read(r => r.Action("GetHandlingCost", "InventoryReceipt").Data("ParamData"))
+                .PageSize(10)
+                )
+            )
+        </div>
+        <hr />
+        <div class="col-lg-12 col-xs-24">
+            @(Html.Kendo().Grid<AKR_LANDED_COST_FAME.Areas.Transactions.Models.THandlingCostDetail>()
+                .Name("THandlingCostDetail")
+                .Columns(columns =>
+                {
+                    columns.Bound(c => c.PONumber).Width(200);
+                    columns.Bound(c => c.Quantity).Width(200).Format("{0: #,##0.00000}");
+                    columns.Bound(c => c.Amount).Width(200).Title("Amount IDR").Format("{0: #,##0.00000}");
+                    columns.Bound(c => c.Percentage).Width(200).Format("{0: #,##0.00000}");
+                    columns.Bound(c => c.QuantityBL_OBV).Width(200).Format("{0: #,##0.00000}");
+                    columns.Bound(c => c.QuantityBL_15C).Width(200).Format("{0: #,##0.00000}");
+                    columns.Bound(c => c.QuantitySFBD_15C).Width(200).Format("{0: #,##0.00000}");
+                    columns.Bound(c => c.QuantitySFBD_15C).Width(200).Format("{0: #,##0.00000}");
+                    columns.Bound(c => c.QuantityRCVD_OBV).Width(200).Format("{0: #,##0.00000}");
+                    columns.Bound(c => c.QuantityRCVD_15C).Width(200).Format("{0: #,##0.00000}");
+                    columns.Bound(c => c.HandlingCost).Width(200).Format("{0: #,##0.00000}");
+                })
+                .Scrollable()
+                .Sortable()
+                .Filterable(x => x.Extra(false))
+                .Pageable(pageable => pageable
+                .Refresh(true)
+                .PageSizes(true)
+                .ButtonCount(5))
+                .DataSource(dataSource => dataSource
+                .Ajax()
+                .ServerOperation(true)
+                .Model(m => m.Id(user => user.PONumber))
+                .Read(r => r.Action("GetHandlingCostDetail", "InventoryReceipt").Data("ParamDataDetail"))
+                .PageSize(10)
+                )
+            )
+        </div>
+    </div>
+</section>
+
+<script>
+    function openWindow(element) {
+        var PONumber = $("#@Html.IdFor(m=>m.PONumberFA)").val();
+        if (PONumber != "") {
+            var wdw = $("#WFHistory").getKendoWindow();
+            wdw.refresh({ url: "/Transactions/InventoryBranch/WorkflowHistory?id=" + PONumber }).center().open();
+        }
+    }
+    function ParamData() {
+        var PONumberFA = $("#@Html.IdFor(m=>m.PONumberFA)").val();
+        var PONumber = $("#@Html.IdFor(m=>m.PONumber)").val();
+        var ReceiptNo = $("#@Html.IdFor(m=>m.ReceiptNo)").val();
+        if (ReceiptNo === "") {
+            ReceiptNo = 0;
+        }
+        var param = {
+            PONumberFA: PONumberFA,
+            PONumber: PONumber,
+            RcptNo: ReceiptNo
+        }
+        console.log(param);
+        return param;
+    }
+    function ParamDataDetail() {
+        return {
+            PONumber: $("#@Html.IdFor(m=>m.PONumber)").val(),
+            PONumberFA: $("#@Html.IdFor(m=>m.PONumberFA)").val(),
+            Quantity_BL_15C: $("#@Html.IdFor(m=>m.Quantity_BL_15C)").val(),
+            Quantity_BL_OBV: $("#@Html.IdFor(m=>m.Quantity_BL_OBV)").val(),
+            Quantity_RCVD_15C: $("#@Html.IdFor(m=>m.Quantity_RCVD_15C)").val(),
+            Quantity_RCVD_OBV: $("#@Html.IdFor(m=>m.Quantity_RCVD_OBV)").val(),
+            Quantity_SFBD_15C: $("#@Html.IdFor(m=>m.Quantity_SFBD_15C)").val(),
+            Quantity_SFBD_OBV: $("#@Html.IdFor(m=>m.Quantity_SFBD_OBV)").val(),
+            ReceiptNo: $("#@Html.IdFor(m=>m.ReceiptNo)").val()
+        }
+    }
+    function Calculation() {
+        $('#THandlingCostDetail').data('kendoGrid').dataSource.read();
+    }
+    function OnChangePurchaseOrder() {
+        var PONumber = $("#@Html.IdFor(m=>m.PONumber)").val();
+        var url = '@Url.Action("GetPODetail", "InventoryReceipt", new { area = "Transactions" })';
+        if (PONumber != "") {
+            $('#THandlingCost').data('kendoGrid').dataSource.read();
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { 'PONumber': PONumber },
+                dataType: "json",
+                success: function (data) {
+                    try {
+                        var json = data.result;
+                        console.log(json);
+                        $("#@Html.IdFor(m => m.PONumberFA)").val(json.PONumberFA);
+                        $("#@Html.IdFor(m => m.SiteCode)").val(json.SiteCode);
+                        $("#@Html.IdFor(m => m.TypePO)").val(json.TypePO);
+                    }
+                    catch (e) {
+                        console.log("err: " + e);
+                    }
+                },
+                failure: function (response) {
+                    console.log('fail: ');
+                },
+                error: function (data) {
+                    console.log('err: '+data);
+                }
+            });
+        } else {
+            $("#@Html.IdFor(m => m.PONumberFA)").val("");
+            $("#@Html.IdFor(m => m.SiteCode)").val("");
+            $("#TypePO").val("Single");
+        }
+    }
+
+    function SubmitForm(e) {
+
+        $('#@Html.IdFor(m=>m.ActionType)').val(e);
+        $('#@Html.IdFor(m=>m.ActionType)').trigger('change');
+        if (e === '@ActionType.Approve') {
+            if ($("#@Html.IdFor(m=>m.PONumber)").val() === "") {
+                alert("PO Number must be selected!.");
+            } else if ($("#@Html.IdFor(m=>m.ReceivedDate)").val() === "") {
+                alert("Received Date must be filled!.");
+            } else if ($("#@Html.IdFor(m=>m.TTBNumber)").val() === "") {
+                alert("TTB Number must be filled!.");
+            } else if ($("#@Html.IdFor(m=>m.Quantity_BL_OBV)").val() === "" || $("#@Html.IdFor(m=>m.Quantity_BL_OBV)").val() === "0") {
+                alert("Quantity BL OBV must be filled!.");
+            }else if ($("#@Html.IdFor(m=>m.Quantity_RCVD_OBV)").val() === "" || $("#@Html.IdFor(m=>m.Quantity_RCVD_OBV)").val() === "0") {
+                alert("Quantity Received OBV must be filled!.");
+            }  else {
+                if (confirm("Are you really sure that you want to submit the data ?")) {
+                    $("#FormInventoryReceived").submit();
+                } else {
+                    alert("You decided to not submit the form!");
+                }
+            }
+        }
+        else if (e === '@ActionType.Reject') {
+            if ($("#@Html.IdFor(m=>m.RejectToLevel)").val() === "") {
+                alert("Reject to level must be selected!.");
+            } else if ($("#@Html.IdFor(m=>m.Remarks)").val() === "") {
+                alert("Remarks Approval must be filled!.");
+            } else {
+                if (confirm("Are you really sure that you want to Reject the data ?")) {
+                    $("#FormInventoryReceived").submit();
+                } else {
+                    alert("You decided to not submit the form!");
+                }
+            }
+        }
+    }
+</script>

@@ -1,0 +1,110 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="content-header">
+    <h1>
+        Master User
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-xs-18 col-md-12">
+            <div class="box box-primary">
+                <div class="box-body">
+                    <div class="form-group">
+                    </div>
+                    @(Html.Kendo().Grid<AKR_LANDED_COST_FAME.Areas.MasterData.Models.UserViewModel>()
+                        .Name("GridUser")
+                        .HtmlAttributes(new { data_enhance_grid = "true" })
+                        .Events(e =>
+                        {
+                            e.Edit("onGridEdit");
+                        }
+                        )
+                        .Columns(columns =>
+                        {
+                            columns.Bound(c => c.Username);
+                            columns.Bound(c => c.Email);
+                            columns.Bound(c => c.Role);
+                            columns.Bound(c => c.EntityName);
+                            columns.Command(command => { command.Edit();command.Destroy(); }).Width(250);
+                        })
+                        .ToolBar(toolbar => toolbar.Create())
+                                .Scrollable()
+                                .Sortable()
+                                .Filterable(x => x.Extra(false))
+                                .Pageable(pageable => pageable
+                                .Refresh(true)
+                                .PageSizes(true)
+                                .ButtonCount(5))
+                                .DataSource(dataSource => dataSource
+                                .Ajax()
+                                .ServerOperation(true)
+                                .Model(m =>
+                                {
+                                    m.Id(user => user.Username);
+                                    m.Field(f => f.Status).DefaultValue(true);
+                                })
+                                .Create(create => create.Action("CreateData", "User"))
+                                .Read(read => read.Action("GetData", "User"))
+                                .Update(update => update.Action("UpdateData", "User"))
+                                .Destroy(d => d.Action("DeleteData", "User"))
+                                .PageSize(10)
+                        )
+                        .Editable(editable => editable.Mode(GridEditMode.PopUp).TemplateName("FormUser"))
+                    )
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script type="text/javascript">
+    function UsernameChange(e) {
+        var userName = $('#Username').val();
+        if (userName === "") {
+            $('#Email').val("");
+        } else {
+            $('#Email').data('kendoTextBox').value(userName + "@@akr.co.id");
+            $('#Email').data('kendoTextBox').trigger("change");
+        }
+    }
+    function onSave(e) {
+        if (e.type == "create" || e.type == "update") {
+            if (!e.response.Errors) {
+                this.read();
+            }
+        } else if (e.type == "destroy") {
+            this.read();
+        }
+    }
+    function error(args) {
+        if (args.errors) {
+            var grid = $("#GridUser").data("kendoGrid");
+            grid.one("dataBinding", function (e) {
+                e.preventDefault();   // cancel grid rebind if error occurs
+            });
+            var message = "";
+            $.each(args.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function () {
+                        message += this + "\n";
+                    });
+                }
+            });
+            alert(message);
+        }
+    }
+    function onGridEdit(e) {
+        if (e.model.isNew()) {
+            $('.k-window-title').text("Add");
+            $(".k-grid-update")[0].innerHTML = "<span class='k-icon k-i-check'></span>Save";
+
+        } else {
+            $(e.container).find('#Username').data('kendoDropDownList').enable(false);
+        }
+    }
+</script>
