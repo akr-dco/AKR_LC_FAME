@@ -15,22 +15,24 @@ pipeline {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
                     sh '''
-ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
-powershell -NoProfile -Command "
+ENCODED=$(echo "
 $ts = Get-Date -Format yyyyMMdd_HHmmss
 $dst = '${BACKUP_DIR}/' + $ts
 New-Item -ItemType Directory -Force -Path $dst | Out-Null
 
 $folders = @('Areas','Models','Views','bin')
 foreach ($f in $folders) {
-  $src = '${TARGET_DIR}/' + $f
-  if (Test-Path $src) {
-    robocopy $src ($dst + '\\\\' + $f) /E /R:1 /W:1 | Out-Null
-  }
+    $src = '${TARGET_DIR}/' + $f
+    if (Test-Path $src) {
+        robocopy $src ($dst + '\\\\' + $f) /E /R:1 /W:1 | Out-Null
+    }
 }
 
 Write-Host 'BACKUP OK => ' $dst
-"
+" | iconv -t UTF-16LE | base64 -w 0)
+
+ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
+powershell -NoProfile -EncodedCommand $ENCODED
 '''
                 }
             }
