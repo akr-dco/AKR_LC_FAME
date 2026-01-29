@@ -33,19 +33,20 @@ pipeline {
         }
 
         stage('Copy New Files (SCP)') {
-            steps {
-                sshagent(credentials: [env.SSH_CRED]) {
-                    sh """
-                    scp -o StrictHostKeyChecking=no -r \
-                        AKR_LC_FAME/Areas \
-                        AKR_LC_FAME/Models \
-                        AKR_LC_FAME/Views \
-                        AKR_LC_FAME/bin \
-                        ${WIN_USER}@${WIN_HOST}:${TARGET_DIR}/
-                    """
-                }
-            }
+    steps {
+        sshagent(credentials: [env.SSH_CRED]) {
+            sh '''
+            scp -o StrictHostKeyChecking=no -r \
+                Areas \
+                Models \
+                Views \
+                bin \
+                ${WIN_USER}@${WIN_HOST}:${TARGET_DIR}/
+            '''
         }
+    }
+}
+
 
         stage('Verify Files (Optional)') {
             steps {
