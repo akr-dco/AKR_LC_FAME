@@ -12,31 +12,35 @@ pipeline {
     stages {
 
         stage('Backup Existing Files') {
-            steps {
-                sshagent(credentials: [env.SSH_CRED]) {
-                    sh '''
-ENCODED=$(echo "
+    steps {
+        sshagent(credentials: [env.SSH_CRED]) {
+            sh '''
+ENCODED=$(cat <<'EOF' | iconv -t UTF-16LE | base64 -w 0
 $ts = Get-Date -Format yyyyMMdd_HHmmss
-$dst = '${BACKUP_DIR}/' + $ts
+$dst = "E:/BACKUP/AFTER/$ts"
+
 New-Item -ItemType Directory -Force -Path $dst | Out-Null
 
-$folders = @('Areas','Models','Views','bin')
+$folders = @("Areas","Models","Views","bin")
+
 foreach ($f in $folders) {
-    $src = '${TARGET_DIR}/' + $f
+    $src = "C:/inetpub/wwwroot/AKR_LC_FAME/$f"
     if (Test-Path $src) {
-        robocopy $src ($dst + '\\\\' + $f) /E /R:1 /W:1 | Out-Null
+        robocopy $src "$dst\\$f" /E /R:1 /W:1 | Out-Null
     }
 }
 
-Write-Host 'BACKUP OK => ' $dst
-" | iconv -t UTF-16LE | base64 -w 0)
+Write-Host "BACKUP OK => $dst"
+EOF
+)
 
-ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
+ssh -o StrictHostKeyChecking=no administrator@192.168.192.131 \
 powershell -NoProfile -EncodedCommand $ENCODED
 '''
-                }
-            }
         }
+    }
+}
+
 
         stage('Deploy New Files') {
             steps {
