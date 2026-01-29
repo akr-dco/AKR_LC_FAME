@@ -2,29 +2,41 @@ pipeline {
     agent any
 
     environment {
-        WIN_HOST   = "192.168.192.131"
-        WIN_USER   = "administrator"
-        TARGET_DIR = "C:/inetpub/wwwroot/AKR_LC_FAME"
-        BACKUP_DIR = "E:/BACKUP/AFTER"
-        SSH_CRED   = "ssh-jenkinsprod"
-        TS         = "${new Date().format('yyyyMMdd_HHmmss')}"
+        SSH_CRED  = 'ssh-jenkinsprod'
+        WIN_USER  = 'administrator'
+        WIN_HOST  = '192.168.192.131'
+        TARGET_DIR = 'C:/inetpub/wwwroot/AKR_LC_FAME'
+        BACKUP_ROOT = 'E:/BACKUP/AFTER'
     }
 
     stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
         stage('Backup Existing Files') {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
                     sh """
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -Command "
-                        New-Item -ItemType Directory -Force -Path '${BACKUP_DIR}/${TS}' | Out-Null
+                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -Command "
+                        \$timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+                        \$backupPath = Join-Path '${BACKUP_ROOT}' \$timestamp
+                        \$target = '${TARGET_DIR}'
 
-                        \$folders = @('Areas','Models','Views','bin')
-                        foreach (\$f in \$folders) {
-                            if (Test-Path '${TARGET_DIR}/' + \$f) {
-                                Copy-Item '${TARGET_DIR}/' + \$f '${BACKUP_DIR}/${TS}/' -Recurse -Force
+                        New-Item -ItemType Directory -Force -Path \$backupPath | Out-Null
+
+                        foreach (\$folder in 'Areas','Models','Views','bin') {
+                            \$src = Join-Path \$target \$folder
+                            \$dst = Join-Path \$backupPath \$folder
+                            if (Test-Path \$src) {
+                                robocopy \$src \$dst /E /R:2 /W:2 | Out-Null
                             }
                         }
+
+                        Write-Host 'Backup completed to:' \$backupPath
                     "
                     """
                 }
@@ -35,11 +47,14 @@ pipeline {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
                     sh """
-                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -Command "
-                        Remove-Item '${TARGET_DIR}/Areas'  -Recurse -Force -ErrorAction SilentlyContinue
-                        Remove-Item '${TARGET_DIR}/Models' -Recurse -Force -ErrorAction SilentlyContinue
-                        Remove-Item '${TARGET_DIR}/Views'  -Recurse -Force -ErrorAction SilentlyContinue
-                        Remove-Item '${TARGET_DIR}/bin'    -Recurse -Force -ErrorAction SilentlyContinue
+                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -Command "
+                        foreach (\$folder in 'Areas','Models','Views','bin') {
+                            \$path = Join-Path '${TARGET_DIR}' \$folder
+                            if (Test-Path \$path) {
+                                Remove-Item \$path -Recurse -Force
+                            }
+                        }
+                        Write-Host 'Old folders deleted'
                     "
                     """
                 }
@@ -65,8 +80,8 @@ pipeline {
             steps {
                 sshagent(credentials: [env.SSH_CRED]) {
                     sh """
-                    ssh ${WIN_USER}@${WIN_HOST} powershell -Command "
-                        Get-ChildItem '${TARGET_DIR}' | Select Name
+                    ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} powershell -NoProfile -Command "
+                        Get-ChildItem '${TARGET_DIR}'
                     "
                     """
                 }
@@ -76,10 +91,13 @@ pipeline {
 
     post {
         success {
-            echo "✅ DEPLOYMENT SUCCESS — backup tersimpan di ${BACKUP_DIR}/${TS}"
+            echo '✅ DEPLOYMENT SUCCESS — backup aman & versi baru live'
         }
         failure {
-            echo "❌ DEPLOYMENT FAILED — backup masih aman, siap rollback"
+            echo '❌ DEPLOYMENT FAILED — backup masih aman, siap rollback'
+        }
+        always {
+            cleanWs()
         }
     }
 }
