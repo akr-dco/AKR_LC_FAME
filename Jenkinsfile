@@ -41,32 +41,18 @@ powershell -NoProfile -EncodedCommand $ENCODED
     }
 }
 
-        stage('Deploy New Files (MIRROR)') {
-    steps {
-        sshagent(credentials: [env.SSH_CRED]) {
-            sh '''
-ENCODED=$(cat <<'EOF' | iconv -t UTF-16LE | base64 -w 0
-$src = "C:/TEMP/DEPLOY"   # tempat repo hasil scp
-$dst = "C:/inetpub/wwwroot/AKR_LC_FAME"
 
-$folders = @("Areas","Models","Views","bin")
-
-foreach ($f in $folders) {
-    robocopy "$src/$f" "$dst/$f" /MIR /R:1 /W:1 | Out-Null
-}
-
-Write-Host "DEPLOY MIRROR OK"
-EOF
-)
-
-ssh -o StrictHostKeyChecking=no administrator@192.168.192.131 \
-powershell -NoProfile -EncodedCommand $ENCODED
+        stage('Deploy New Files') {
+            steps {
+                sshagent(credentials: [env.SSH_CRED]) {
+                    sh '''
+scp -o StrictHostKeyChecking=no -r \
+Areas Models Views bin \
+${WIN_USER}@${WIN_HOST}:${TARGET_DIR}/
 '''
+                }
+            }
         }
-    }
-}
-
-        
 
         stage('Verify Deployment') {
             steps {
