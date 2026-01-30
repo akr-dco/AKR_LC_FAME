@@ -43,16 +43,30 @@ powershell -NoProfile -EncodedCommand $ENCODED
 
 
         stage('Deploy New Files') {
-            steps {
-                sshagent(credentials: [env.SSH_CRED]) {
-                    sh '''
+    steps {
+        sshagent(credentials: [env.SSH_CRED]) {
+            sh '''
+ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
+powershell -NoProfile -Command "
+$folders = @('Areas','Models','Views','bin')
+foreach ($f in $folders) {
+    $path = '${TARGET_DIR}\\' + $f
+    if (Test-Path $path) {
+        Remove-Item -Recurse -Force $path
+    }
+}
+Write-Host 'OLD FOLDERS DELETED'
+"
+'''
+            sh '''
 scp -o StrictHostKeyChecking=no -r \
 Areas Models Views bin \
 ${WIN_USER}@${WIN_HOST}:${TARGET_DIR}/
 '''
-                }
-            }
         }
+    }
+}
+
 
         stage('Verify Deployment') {
             steps {
