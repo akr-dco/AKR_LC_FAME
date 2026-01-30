@@ -45,17 +45,19 @@ powershell -NoProfile -EncodedCommand $ENCODED
     steps {
         sshagent(credentials: [env.SSH_CRED]) {
             sh '''
-ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
-powershell -NoProfile -Command "
+ENCODED=$(echo "
 $folders = @('Areas','Models','Views','bin')
 foreach ($f in $folders) {
-    $path = '${TARGET_DIR}\\' + $f
+    $path = '${TARGET_DIR}\\\\' + $f
     if (Test-Path $path) {
         Remove-Item -Recurse -Force $path
     }
 }
 Write-Host 'OLD FOLDERS DELETED'
-"
+" | iconv -t UTF-16LE | base64 -w 0)
+
+ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
+powershell -NoProfile -EncodedCommand $ENCODED
 '''
             sh '''
 scp -o StrictHostKeyChecking=no -r \
@@ -65,6 +67,7 @@ ${WIN_USER}@${WIN_HOST}:${TARGET_DIR}/
         }
     }
 }
+
 
         stage('Verify Deployment') {
             steps {
