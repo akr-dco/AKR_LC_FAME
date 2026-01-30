@@ -41,7 +41,6 @@ powershell -NoProfile -EncodedCommand $ENCODED
     }
 }
 
-
         stage('Deploy New Files') {
     steps {
         sshagent(credentials: [env.SSH_CRED]) {
@@ -66,7 +65,6 @@ ${WIN_USER}@${WIN_HOST}:${TARGET_DIR}/
         }
     }
 }
-
 
         stage('Verify Deployment') {
             steps {
