@@ -5,7 +5,7 @@ pipeline {
         WIN_HOST = "192.168.192.131"
         WIN_USER = "administrator"
         TARGET_DIR = "C:/inetpub/wwwroot/AKR_LC_FAME"
-        BACKUP_DIR = "E:/BACKUP/AFTER"
+        BACKUP_DIR = "E:/BACKUP/AFTER/AKR_LC_FAME"
         SSH_CRED  = "ssh-jenkinsprod"
     }
 
@@ -17,7 +17,7 @@ pipeline {
             sh '''
 ENCODED=$(cat <<'EOF' | iconv -t UTF-16LE | base64 -w 0
 $ts = Get-Date -Format yyyyMMdd_HHmmss
-$dst = "E:/BACKUP/AFTER/$ts"
+$dst = "E:/BACKUP/AFTER/AKR_LC_FAME$ts"
 
 New-Item -ItemType Directory -Force -Path $dst | Out-Null
 
