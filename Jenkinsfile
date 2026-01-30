@@ -45,12 +45,13 @@ powershell -NoProfile -EncodedCommand $ENCODED
     steps {
         sshagent(credentials: [env.SSH_CRED]) {
             sh '''
+# === DELETE OLD FOLDERS (SYNC WITH GIT) ===
 ENCODED=$(echo "
-$folders = @('Areas','Models','Views','bin')
-foreach ($f in $folders) {
-    $path = '${TARGET_DIR}\\\\' + $f
-    if (Test-Path $path) {
-        Remove-Item -Recurse -Force $path
+\$folders = @('Areas','Models','Views','bin')
+foreach (\$f in \$folders) {
+    \$path = '${TARGET_DIR}\\\\' + \$f
+    if (Test-Path \$path) {
+        Remove-Item -Recurse -Force \$path
     }
 }
 Write-Host 'OLD FOLDERS DELETED'
@@ -58,8 +59,8 @@ Write-Host 'OLD FOLDERS DELETED'
 
 ssh -o StrictHostKeyChecking=no ${WIN_USER}@${WIN_HOST} \
 powershell -NoProfile -EncodedCommand $ENCODED
-'''
-            sh '''
+
+# === COPY NEW FILES FROM JENKINS WORKSPACE ===
 scp -o StrictHostKeyChecking=no -r \
 Areas Models Views bin \
 ${WIN_USER}@${WIN_HOST}:${TARGET_DIR}/
@@ -67,6 +68,7 @@ ${WIN_USER}@${WIN_HOST}:${TARGET_DIR}/
         }
     }
 }
+
 
 
         stage('Verify Deployment') {
